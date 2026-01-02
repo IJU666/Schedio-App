@@ -10,19 +10,66 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Jadwal',
+      title: 'Tugas',
       theme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0A0E27),
-        primaryColor: const Color(0xFF0A0E27),
+        scaffoldBackgroundColor: const Color(0xFF000000),
+        primaryColor: const Color(0xFF7AB8F5),
       ),
-      home: const JadwalScreen(),
+      home: const TugasPage(),
     );
   }
 }
 
-class JadwalScreen extends StatelessWidget {
-  const JadwalScreen({Key? key}) : super(key: key);
+class TugasPage extends StatefulWidget {
+  const TugasPage({Key? key}) : super(key: key);
+
+  @override
+  State<TugasPage> createState() => _TugasPageState();
+}
+
+class _TugasPageState extends State<TugasPage> {
+  int selectedTab = 0;
+  int selectedBottomTab = 0;
+
+  List<TaskGroup> taskGroups = [
+    TaskGroup(
+      date: 'Hari ini - 2 Desember 2025',
+      courses: [
+        Course(
+          code: 'MGT 101',
+          name: 'Organization Management',
+          color: const Color(0xFFFF9F59),
+          tasks: [
+            Task(title: 'Checklist title 1', isCompleted: true),
+            Task(title: 'Checklist title 2', isCompleted: true),
+            Task(title: 'Checklist title 3', isCompleted: false),
+          ],
+        ),
+        Course(
+          code: 'EC 203',
+          name: 'Principles Macroeconomics',
+          color: const Color(0xFF5FC4E7),
+          tasks: [
+            Task(title: 'Checklist title 4', isCompleted: false),
+          ],
+        ),
+      ],
+    ),
+    TaskGroup(
+      date: 'Besok - 2 Desember 2025',
+      courses: [
+        Course(
+          code: 'FN 215',
+          name: 'Financial Management',
+          color: const Color(0xFF7AB8F5),
+          tasks: [
+            Task(title: 'Checklist title 5', isCompleted: false),
+          ],
+        ),
+      ],
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -30,128 +77,65 @@ class JadwalScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text(
-                    'Jadwal',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Tugas',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
-                ],
-              ),
-            ),
-            
-            // Date Tabs
-            Container(
-              height: 70,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildDateTab('2', 'Selasa', true),
-                  _buildDateTab('3', 'Rabu', false),
-                  _buildDateTab('4', 'Kamis', false),
-                  _buildDateTab('5', 'Jumat', false),
-                  _buildDateTab('6', 'Sabtu', false),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 8),
-            
-            // Schedule Grid
-            Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
+                  const SizedBox(height: 16),
+                  Row(
                     children: [
-                      _buildTimeRow('09\nAM', [
-                        ScheduleItem('Org\nMgt', 'Room 101', const Color(0xFFFFD88D), 1),
-                        ScheduleItem('Financial\nMgt', 'Room 101', const Color(0xFF6B7FFF), 1),
-                        null,
-                        null,
-                        ScheduleItem('Micro', 'Room 101', const Color(0xFFB457FF), 1),
-                      ]),
-                      
-                      _buildTimeRow('10\nAM', [
-                        ScheduleItem('Macro', 'Room 101', const Color(0xFF4ECDC4), 1),
-                        null,
-                        ScheduleItem('Macro', 'Room 101', const Color(0xFF6B7FFF), 1),
-                        ScheduleItem('Org\nMgt', 'Room 101', const Color(0xFFFFD88D), 1),
-                        ScheduleItem('Org\nMgt', 'Room 101', const Color(0xFFFFB86C), 1),
-                      ]),
-                      
-                      _buildTimeRow('11\nAM', [
-                        ScheduleItem('Micro', 'Room 101', const Color(0xFFB457FF), 1),
-                        ScheduleItem('Org\nMgt', 'Room 101', const Color(0xFFFFB86C), 1),
-                        ScheduleItem('Micro', 'Room 101', const Color(0xFFB457FF), 2),
-                        ScheduleItem('Micro', 'Room 101', const Color(0xFFB457FF), 1),
-                        ScheduleItem('Macro', 'Room 101', const Color(0xFF4ECDC4), 4),
-                      ]),
-                      
-                      _buildTimeRow('12\nPM', [
-                        ScheduleItem('Financial\nMgt', 'Room 101', const Color(0xFF6B7FFF), 3),
-                        null,
-                        null,
-                        null,
-                        null,
-                      ]),
-                      
-                      _buildTimeRow('01\nPM', [
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                      ]),
-                      
-                      _buildTimeRow('02\nPM', [
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                      ]),
+                      _buildTabButton('Tenggat', 0),
+                      const SizedBox(width: 8),
+                      _buildTabButton('Kelas', 1),
+                      const SizedBox(width: 8),
+                      _buildTabButton('Prioritas', 2),
                     ],
                   ),
-                ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: taskGroups.length,
+                itemBuilder: (context, index) {
+                  return _buildTaskGroup(taskGroups[index]);
+                },
               ),
             ),
           ],
         ),
       ),
-      
-      // Bottom Navigation Bar
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1F3A),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
+          color: const Color(0xFF1C1C1E),
+          border: Border(
+            top: BorderSide(
+              color: Colors.grey.withOpacity(0.2),
+              width: 0.5,
             ),
-          ],
+          ),
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(Icons.calendar_today, 'Today', true),
-                _buildNavItem(Icons.view_week, 'Schedule', false),
+                _buildBottomNavItem(Icons.calendar_today, 'Today', 0),
+                _buildBottomNavItem(Icons.bar_chart, 'Schedule', 1),
                 _buildAddButton(),
-                _buildNavItem(Icons.grid_view, 'Assignme', false),
-                _buildNavItem(Icons.settings, 'Settings', false),
+                _buildBottomNavItem(Icons.grid_view, 'Assignments', 3),
+                _buildBottomNavItem(Icons.settings, 'Settings', 4),
               ],
             ),
           ),
@@ -160,124 +144,198 @@ class JadwalScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDateTab(String date, String day, bool isSelected) {
+  Widget _buildTabButton(String text, int index) {
+    bool isSelected = selectedTab == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedTab = index;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF7AB8F5) : const Color(0xFF2C2C2E),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: isSelected ? Colors.black : Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTaskGroup(TaskGroup group) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 16, bottom: 12),
+          child: Text(
+            group.date,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        ...group.courses.map((course) => _buildCourseCard(course)).toList(),
+      ],
+    );
+  }
+
+  Widget _buildCourseCard(Course course) {
     return Container(
-      width: 60,
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFF2A2F4F) : Colors.transparent,
+        color: const Color(0xFF1C1C1E),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            date,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: isSelected ? Colors.white : Colors.grey,
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${course.code} - ${course.name}',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: course.color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.edit,
+                  color: course.color,
+                  size: 20,
+                ),
+              ],
             ),
+          ),
+          ...course.tasks.asMap().entries.map((entry) {
+            return _buildTaskItem(entry.value, entry.key, course.tasks.length);
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTaskItem(Task task, int index, int totalTasks) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: Colors.grey.withOpacity(0.2),
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  task.isCompleted = !task.isCompleted;
+                });
+              },
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: task.isCompleted
+                      ? const Color(0xFFFF9F59)
+                      : Colors.transparent,
+                  border: Border.all(
+                    color: task.isCompleted
+                        ? const Color(0xFFFF9F59)
+                        : Colors.grey,
+                    width: 2,
+                  ),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: task.isCompleted
+                    ? const Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: 16,
+                      )
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.white,
+                      decoration: task.isCompleted
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  const Text(
+                    'Note from checklist',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavItem(IconData icon, String label, int index) {
+    bool isSelected = selectedBottomTab == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedBottomTab = index;
+        });
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: isSelected ? const Color(0xFF7AB8F5) : Colors.grey,
+            size: 24,
           ),
           const SizedBox(height: 4),
           Text(
-            day,
+            label,
             style: TextStyle(
-              fontSize: 12,
-              color: isSelected ? Colors.white70 : Colors.grey,
+              fontSize: 10,
+              color: isSelected ? const Color(0xFF7AB8F5) : Colors.grey,
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildTimeRow(String time, List<ScheduleItem?> items) {
-    return SizedBox(
-      height: 80,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 40,
-            child: Text(
-              time,
-              style: const TextStyle(
-                fontSize: 10,
-                color: Colors.grey,
-                height: 1.2,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Row(
-              children: List.generate(5, (index) {
-                final item = items[index];
-                if (item == null) {
-                  return Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.all(2),
-                    ),
-                  );
-                }
-                return Expanded(
-                  child: Container(
-                    height: item.height * 80.0,
-                    margin: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: item.color,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.all(8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          item.title,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                            height: 1.1,
-                          ),
-                        ),
-                        Text(
-                          item.room,
-                          style: const TextStyle(
-                            fontSize: 9,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, bool isSelected) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          color: isSelected ? const Color(0xFF6B7FFF) : Colors.grey,
-          size: 24,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            color: isSelected ? const Color(0xFF6B7FFF) : Colors.grey,
-          ),
-        ),
-      ],
     );
   }
 
@@ -285,16 +343,9 @@ class JadwalScreen extends StatelessWidget {
     return Container(
       width: 56,
       height: 56,
-      decoration: BoxDecoration(
-        color: const Color(0xFF6B7FFF),
+      decoration: const BoxDecoration(
+        color: Color(0xFF7AB8F5),
         shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF6B7FFF).withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: const Icon(
         Icons.add,
@@ -305,11 +356,30 @@ class JadwalScreen extends StatelessWidget {
   }
 }
 
-class ScheduleItem {
-  final String title;
-  final String room;
-  final Color color;
-  final int height;
+class TaskGroup {
+  final String date;
+  final List<Course> courses;
 
-  ScheduleItem(this.title, this.room, this.color, this.height);
+  TaskGroup({required this.date, required this.courses});
+}
+
+class Course {
+  final String code;
+  final String name;
+  final Color color;
+  final List<Task> tasks;
+
+  Course({
+    required this.code,
+    required this.name,
+    required this.color,
+    required this.tasks,
+  });
+}
+
+class Task {
+  final String title;
+  bool isCompleted;
+
+  Task({required this.title, this.isCompleted = false});
 }
