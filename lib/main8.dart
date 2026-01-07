@@ -11,25 +11,25 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'edit Kelas',
+      title: 'Tambah Kelas',
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF0A0E27),
         primaryColor: const Color(0xFF5B9FFF),
       ),
-      home: const editKelasScreen(),
+      home: const TambahKelasScreen(),
     );
   }
 }
 
-class editKelasScreen extends StatefulWidget {
-  const editKelasScreen({Key? key}) : super(key: key);
+class TambahKelasScreen extends StatefulWidget {
+  const TambahKelasScreen({Key? key}) : super(key: key);
 
   @override
-  State<editKelasScreen> createState() => _editKelasScreenState();
+  State<TambahKelasScreen> createState() => _TambahKelasScreenState();
 }
 
-class _editKelasScreenState extends State<editKelasScreen> {
+class _TambahKelasScreenState extends State<TambahKelasScreen> {
   final TextEditingController _mataKuliahController = TextEditingController();
   final TextEditingController _ruanganController = TextEditingController();
   final TextEditingController _waktuMulaiController = TextEditingController();
@@ -87,7 +87,7 @@ class _editKelasScreenState extends State<editKelasScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'edit Kelas',
+                        'Tambah Kelas',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
