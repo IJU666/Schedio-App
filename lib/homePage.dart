@@ -29,7 +29,7 @@ class ScheduleItem {
   final String? badge;
   final Color color;
   final bool hasTask;
-  final List<TaskItem>? tasks;
+  List<TaskItem>? tasks;
 
   ScheduleItem({
     required this.startTime,
@@ -65,7 +65,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       endTime: '09:00',
       title: 'MGT 101 - Organization Management',
       room: 'Room 302',
-      badge: null,
       color: Colors.orange,
       hasTask: true,
       tasks: [
@@ -93,7 +92,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     ScheduleItem(
       startTime: '11:10 AM',
       endTime: '12:00 AM',
-      title: 'FN 215 - Financial Management',
+      title: 'FN 210 - Financial Management',
       room: 'Room 101',
       color: Colors.blue,
     ),
@@ -107,8 +106,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
+            const Padding(
+              padding: EdgeInsets.all(16.0),
               child: Text(
                 '2 Desember 2025',
                 style: TextStyle(
@@ -116,19 +115,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildDateItem('2', 'Selasa', true, hasNotification: true, notifCount: '2'),
-                  _buildDateItem('3', 'Rabu', false, hasNotification: true, notifCount: '1'),
-                  _buildDateItem('4', 'Kamis', false),
-                  _buildDateItem('5', 'Jumat', false, hasNotification: true, notifCount: '3'),
-                  _buildDateItem('6', 'Sabtu', false),
-                ],
               ),
             ),
             const SizedBox(height: 20),
@@ -148,211 +134,43 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         ),
       ),
       bottomNavigationBar: _buildBottomNavBar(),
-      floatingActionButton: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          color: const Color(0xFF5B9FED),
-          shape: BoxShape.circle,
-        ),
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-    );
-  }
-
-  Widget _buildDateItem(String date, String day, bool isSelected, {bool hasNotification = false, String notifCount = '1'}) {
-    return Container(
-      width: 60,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFF5B9FED) : const Color(0xFF1A2F42),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Text(
-            date,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            day,
-            style: TextStyle(
-              color: isSelected ? Colors.white : Colors.grey[400],
-              fontSize: 12,
-            ),
-          ),
-          if (hasNotification) ...[
-            const SizedBox(height: 4),
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  notifCount,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
     );
   }
 
   Widget _buildScheduleCard(ScheduleItem schedule) {
     return GestureDetector(
       onTap: () {
-        if (schedule.hasTask) {
-          _showTaskDialog(schedule);
-        }
+        _showTaskDialog(schedule);
       },
       child: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF1A2F42),
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.chevron_right, color: Colors.white, size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        schedule.startTime,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 24),
-                    child: Text(
-                      schedule.endTime,
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ],
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                schedule.startTime,
+                style: const TextStyle(color: Colors.white),
               ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            schedule.title,
-                            style: TextStyle(
-                              color: schedule.color,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        if (schedule.hasTask)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: Icon(
-                              Icons.settings,
-                              color: Colors.orange,
-                              size: 20,
-                            ),
-                          ),
-                        if (schedule.badge != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            margin: const EdgeInsets.only(right: 16),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[800],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              schedule.badge!,
-                              style: TextStyle(
-                                color: Colors.grey[400],
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Text(
-                          schedule.room,
-                          style: TextStyle(
-                            color: Colors.grey[400],
-                            fontSize: 13,
-                          ),
-                        ),
-                        if (schedule.status != null) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            width: 18,
-                            height: 18,
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                '!',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            schedule.status!,
-                            style: TextStyle(
-                              color: Colors.grey[400],
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
+              const SizedBox(height: 6),
+              Text(
+                schedule.title,
+                style: TextStyle(
+                  color: schedule.color,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                schedule.room,
+                style: TextStyle(color: Colors.grey[400]),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -368,7 +186,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             backgroundColor: Colors.transparent,
             insetPadding: const EdgeInsets.all(16),
             child: Container(
-              width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: const Color(0xFF1A2F42),
@@ -378,183 +195,102 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 24),
-                      const SizedBox(width: 8),
-                      Text(
-                        schedule.startTime,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    schedule.title,
+                    style: TextStyle(
+                      color: schedule.color,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Tugas',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (schedule.tasks != null)
+                    ...schedule.tasks!.map((task) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(
                           children: [
-                            Text(
-                              schedule.title,
-                              style: TextStyle(
-                                color: schedule.color,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                            GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              onTap: () {
+                                setDialogState(() {
+                                  task.isCompleted = !task.isCompleted;
+                                });
+                              },
+                              child: Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: task.isCompleted
+                                      ? Colors.orange
+                                      : Colors.transparent,
+                                  border: Border.all(
+                                    color: task.isCompleted
+                                        ? Colors.orange
+                                        : Colors.grey[600]!,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: task.isCompleted
+                                    ? const Icon(
+                                        Icons.check,
+                                        size: 16,
+                                        color: Colors.white,
+                                      )
+                                    : null,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              schedule.room,
-                              style: TextStyle(
-                                color: Colors.grey[400],
-                                fontSize: 13,
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                task.title,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  decoration: task.isCompleted
+                                      ? TextDecoration.lineThrough
+                                      : null,
+                                ),
                               ),
                             ),
                           ],
                         ),
-                      ),
-                      Icon(
-                        Icons.settings,
-                        color: Colors.orange,
-                        size: 24,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Text(
-                        'Tugas',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            '!',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  ...schedule.tasks!.map((task) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              setDialogState(() {
-                                task.isCompleted = !task.isCompleted;
-                              });
-                            },
-                            child: Container(
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                color: task.isCompleted ? Colors.orange : Colors.transparent,
-                                border: Border.all(
-                                  color: task.isCompleted ? Colors.orange : Colors.grey[600]!,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: task.isCompleted
-                                  ? Icon(Icons.check, color: Colors.white, size: 16)
-                                  : null,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              task.title,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                decoration: task.isCompleted ? TextDecoration.lineThrough : null,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 24),
-                    child: Text(
-                      schedule.endTime,
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
+                      );
+                    }).toList(),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          backgroundColor: const Color(0xFF2A3F52),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: Text(
+                        child: const Text(
                           'Cancel',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: TextStyle(color: Colors.white),
                         ),
                       ),
                       const SizedBox(width: 12),
                       TextButton(
-                        onPressed: () => Navigator.pop(context),
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                           backgroundColor: const Color(0xFF5B9FED),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
                         ),
-                        child: Text(
+                        onPressed: () {
+                          _showAddTaskDialog(schedule, setDialogState);
+                        },
+                        child: const Text(
                           '+ Assignment',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: TextStyle(color: Colors.white),
                         ),
                       ),
                     ],
-                  ),
+                  )
                 ],
               ),
             ),
@@ -564,60 +300,64 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     );
   }
 
-  Widget _buildBottomNavBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A2F42),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
+  void _showAddTaskDialog(
+    ScheduleItem schedule,
+    void Function(void Function()) setDialogState,
+  ) {
+    final controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1A2F42),
+          title: const Text(
+            'Tambah Assignment',
+            style: TextStyle(color: Colors.white),
           ),
-        ],
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(Icons.calendar_today, 'Today', 0),
-              _buildNavItem(Icons.bar_chart, 'Schedule', 1),
-              const SizedBox(width: 60),
-              _buildNavItem(Icons.assignment, 'Assignme', 2),
-              _buildNavItem(Icons.settings, 'Settings', 3),
-            ],
+          content: TextField(
+            controller: controller,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Judul tugas',
+              hintStyle: TextStyle(color: Colors.grey[400]),
+            ),
           ),
-        ),
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+            ),
+            TextButton(
+              onPressed: () {
+                if (controller.text.trim().isEmpty) return;
+                setDialogState(() {
+                  schedule.tasks ??= [];
+                  schedule.tasks!.add(
+                    TaskItem(title: controller.text.trim()),
+                  );
+                });
+                Navigator.pop(context);
+              },
+              child: const Text('Add', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, int index) {
-    bool isSelected = _selectedIndex == index;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedIndex = index;
-        });
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? const Color(0xFF5B9FED) : Colors.grey[500],
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? const Color(0xFF5B9FED) : Colors.grey[500],
-              fontSize: 11,
-            ),
-          ),
+  Widget _buildBottomNavBar() {
+    return Container(
+      color: const Color(0xFF1A2F42),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: const [
+          Icon(Icons.calendar_today, color: Colors.grey),
+          Icon(Icons.bar_chart, color: Colors.grey),
+          Icon(Icons.add_circle, color: Color(0xFF5B9FED), size: 40),
+          Icon(Icons.assignment, color: Colors.grey),
+          Icon(Icons.settings, color: Colors.grey),
         ],
       ),
     );
