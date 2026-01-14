@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:reminder_apps/tambahKelas.dart';
 
 void main() {
   runApp(const MyApp());
@@ -25,10 +26,7 @@ class ScheduleItem {
   final String endTime;
   final String title;
   final String room;
-  final String? status;
-  final String? badge;
   final Color color;
-  final bool hasTask;
   List<TaskItem>? tasks;
 
   ScheduleItem({
@@ -36,10 +34,7 @@ class ScheduleItem {
     required this.endTime,
     required this.title,
     required this.room,
-    this.status,
-    this.badge,
     required this.color,
-    this.hasTask = false,
     this.tasks,
   });
 }
@@ -66,39 +61,19 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       title: 'MGT 101 - Organization Management',
       room: 'Room 302',
       color: Colors.orange,
-      hasTask: true,
       tasks: [
         TaskItem(title: 'Checklist title 1', isCompleted: true),
-        TaskItem(title: 'Checklist title 2', isCompleted: true),
-        TaskItem(title: 'Checklist title 3', isCompleted: false),
+        TaskItem(title: 'Checklist title 2'),
       ],
     ),
     ScheduleItem(
-      startTime: '09:10 AM',
-      endTime: '10:00 AM',
+      startTime: '09:10',
+      endTime: '10:00',
       title: 'EC 203 - Principles Macroeconomics',
       room: 'Room 101',
-      status: 'Missing assignment',
-      badge: 'in 45min',
       color: Colors.teal,
     ),
-    ScheduleItem(
-      startTime: '10:10 AM',
-      endTime: '11:00 AM',
-      title: 'EC 202 - Principles Microeconomics',
-      room: 'Room 101',
-      color: Colors.purple,
-    ),
-    ScheduleItem(
-      startTime: '11:10 AM',
-      endTime: '12:00 AM',
-      title: 'FN 210 - Financial Management',
-      room: 'Room 101',
-      color: Colors.blue,
-    ),
   ];
-
-  int _selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +82,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         child: Column(
           children: [
             const Padding(
-              padding: EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16),
               child: Text(
                 '2 Desember 2025',
                 style: TextStyle(
@@ -117,7 +92,24 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 ),
               ),
             ),
+
+            // ===== TANGGAL =====
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildDateItem('2', 'Selasa', true, notif: '2'),
+                  _buildDateItem('3', 'Rabu', false, notif: '1'),
+                  _buildDateItem('4', 'Kamis', false),
+                  _buildDateItem('5', 'Jumat', false, notif: '3'),
+                  _buildDateItem('6', 'Sabtu', false),
+                ],
+              ),
+            ),
+
             const SizedBox(height: 20),
+
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -137,45 +129,86 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     );
   }
 
+  // ===== DATE ITEM =====
+  Widget _buildDateItem(String date, String day, bool selected,
+      {String? notif}) {
+    return Container(
+      width: 60,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: selected ? const Color(0xFF5B9FED) : const Color(0xFF1A2F42),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Text(
+            date,
+            style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            day,
+            style: TextStyle(
+                color: selected ? Colors.white : Colors.grey[400],
+                fontSize: 12),
+          ),
+          if (notif != null)
+            Container(
+              margin: const EdgeInsets.only(top: 4),
+              width: 20,
+              height: 20,
+              decoration: const BoxDecoration(
+                  color: Colors.red, shape: BoxShape.circle),
+              child: Center(
+                child: Text(
+                  notif,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+            )
+        ],
+      ),
+    );
+  }
+
+  // ===== CARD =====
   Widget _buildScheduleCard(ScheduleItem schedule) {
     return GestureDetector(
-      onTap: () {
-        _showTaskDialog(schedule);
-      },
+      onTap: () => _showTaskDialog(schedule),
       child: Container(
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: const Color(0xFF1A2F42),
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                schedule.startTime,
-                style: const TextStyle(color: Colors.white),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                schedule.title,
-                style: TextStyle(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(schedule.startTime,
+                style: const TextStyle(color: Colors.white)),
+            const SizedBox(height: 6),
+            Text(
+              schedule.title,
+              style: TextStyle(
                   color: schedule.color,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                schedule.room,
-                style: TextStyle(color: Colors.grey[400]),
-              ),
-            ],
-          ),
+                  fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            Text(schedule.room,
+                style: TextStyle(color: Colors.grey[400])),
+          ],
         ),
       ),
     );
   }
 
+  // ===== DETAIL + ASSIGNMENT =====
   void _showTaskDialog(ScheduleItem schedule) {
     showDialog(
       context: context,
@@ -184,7 +217,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         builder: (context, setDialogState) {
           return Dialog(
             backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.all(16),
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -195,61 +227,53 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.keyboard_arrow_down,
+                          color: Colors.white),
+                      const SizedBox(width: 8),
+                      Text(schedule.startTime,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   Text(
                     schedule.title,
                     style: TextStyle(
-                      color: schedule.color,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
+                        color: schedule.color,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600),
                   ),
+                  Text(schedule.room,
+                      style: TextStyle(color: Colors.grey[400])),
+                  const SizedBox(height: 8),
+                  Text('Selesai: ${schedule.endTime}',
+                      style: TextStyle(color: Colors.grey[400])),
+
                   const SizedBox(height: 20),
                   const Text(
                     'Tugas',
                     style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+
                   if (schedule.tasks != null)
-                    ...schedule.tasks!.map((task) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Row(
+                    ...schedule.tasks!.map((task) => Row(
                           children: [
-                            GestureDetector(
-                              behavior: HitTestBehavior.translucent,
-                              onTap: () {
+                            Checkbox(
+                              value: task.isCompleted,
+                              activeColor: Colors.orange,
+                              onChanged: (val) {
                                 setDialogState(() {
-                                  task.isCompleted = !task.isCompleted;
+                                  task.isCompleted = val!;
                                 });
                               },
-                              child: Container(
-                                width: 24,
-                                height: 24,
-                                decoration: BoxDecoration(
-                                  color: task.isCompleted
-                                      ? Colors.orange
-                                      : Colors.transparent,
-                                  border: Border.all(
-                                    color: task.isCompleted
-                                        ? Colors.orange
-                                        : Colors.grey[600]!,
-                                    width: 2,
-                                  ),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: task.isCompleted
-                                    ? const Icon(
-                                        Icons.check,
-                                        size: 16,
-                                        color: Colors.white,
-                                      )
-                                    : null,
-                              ),
                             ),
-                            const SizedBox(width: 12),
                             Expanded(
                               child: Text(
                                 task.title,
@@ -262,19 +286,16 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                               ),
                             ),
                           ],
-                        ),
-                      );
-                    }).toList(),
+                        )),
+
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text(
-                          'Cancel',
-                          style: TextStyle(color: Colors.white),
-                        ),
+                        child: const Text('Cancel',
+                            style: TextStyle(color: Colors.white)),
                       ),
                       const SizedBox(width: 12),
                       TextButton(
@@ -300,6 +321,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     );
   }
 
+  // ===== ADD ASSIGNMENT =====
   void _showAddTaskDialog(
     ScheduleItem schedule,
     void Function(void Function()) setDialogState,
@@ -311,10 +333,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF1A2F42),
-          title: const Text(
-            'Tambah Assignment',
-            style: TextStyle(color: Colors.white),
-          ),
+          title: const Text('Tambah Assignment',
+              style: TextStyle(color: Colors.white)),
           content: TextField(
             controller: controller,
             style: const TextStyle(color: Colors.white),
@@ -326,38 +346,73 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+              child: const Text('Cancel',
+                  style: TextStyle(color: Colors.white)),
             ),
             TextButton(
               onPressed: () {
                 if (controller.text.trim().isEmpty) return;
+
                 setDialogState(() {
                   schedule.tasks ??= [];
-                  schedule.tasks!.add(
-                    TaskItem(title: controller.text.trim()),
-                  );
+                  schedule.tasks!
+                      .add(TaskItem(title: controller.text.trim()));
                 });
+
                 Navigator.pop(context);
               },
-              child: const Text('Add', style: TextStyle(color: Colors.white)),
+              child:
+                  const Text('Add', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
       },
     );
   }
-
+  int _selectedIndex = 0;
+  // ===== BOTTOM BAR =====
   Widget _buildBottomNavBar() {
     return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
       color: const Color(0xFF1A2F42),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: const [
-          Icon(Icons.calendar_today, color: Colors.grey),
-          Icon(Icons.bar_chart, color: Colors.grey),
-          Icon(Icons.add_circle, color: Color(0xFF5B9FED), size: 40),
-          Icon(Icons.assignment, color: Colors.grey),
-          Icon(Icons.settings, color: Colors.grey),
+        children: [
+          _buildNavItem(Icons.calendar_today, 'Today', 0),
+          _buildNavItem(Icons.bar_chart, 'Chart', 1),
+          _buildNavItem(Icons.add_circle, 'Add', 2),
+          _buildNavItem(Icons.assignment, 'Assignment', 3),
+          _buildNavItem(Icons.settings, 'Settings', 4)
+        ]
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    bool isSelected = _selectedIndex == index;
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => TambahKelasScreen()));
+        setState(() {
+          _selectedIndex = index;
+        });
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: isSelected ? const Color(0xFF5B9FED) : Colors.grey[500],
+            size: 24,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? const Color(0xFF5B9FED) : Colors.grey[500],
+              fontSize: 11,
+            ),
+          ),
         ],
       ),
     );
