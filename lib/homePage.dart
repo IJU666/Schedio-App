@@ -70,7 +70,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       ],
     ),
     ScheduleItem(
-      startTime: '09:10',
+      startTime: '09:12',
       endTime: '10:00',
       title: 'EC 203 - Principles Macroeconomics',
       room: 'Room 101',
