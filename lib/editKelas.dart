@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:reminder_apps/homePage.dart';
 import 'dart:math' as math;
+import 'package:reminder_apps/jadwal.dart';
+import 'package:reminder_apps/pengaturan.dart';
+import 'package:reminder_apps/tambahKelas.dart';
+import 'package:reminder_apps/tugas.dart';
 
 void main() {
   runApp(const MyApp());
@@ -436,39 +441,56 @@ class _editKelasScreenState extends State<editKelasScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedBottomNavIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedBottomNavIndex = index;
-          });
-        },
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFF0A0E27),
-        selectedItemColor: const Color(0xFF5B9FFF),
-        unselectedItemColor: const Color(0xFF8B8B9E),
-        selectedFontSize: 12,
-        unselectedFontSize: 12,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            label: 'Today',
+
+
+
+      bottomNavigationBar: _buildBottomNavBar(),
+    );
+  }
+
+  int _selectedIndex = 0;
+  // ===== BOTTOM BAR =====
+  Widget _buildBottomNavBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      color: const Color(0xFF1A2F42),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildNavItem(Icons.calendar_today, 'Today', 0, HomepageScreen()),
+          _buildNavItem(Icons.view_list, 'Schedule', 1,JadwalScreen()),
+          _buildNavItem(Icons.add_circle, 'Add', 2,TambahKelasScreen()),
+          _buildNavItem(Icons.assignment, 'Assignment', 3,TugasPage()),
+          _buildNavItem(Icons.settings, 'Settings', 4,PengaturanScreen())
+        ]
+      ),  
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int index, Widget page) {
+    bool isSelected = _selectedIndex == index;
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => page));
+        setState(() {
+          _selectedIndex = index;
+        });
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: isSelected ? const Color(0xFF5B9FED) : Colors.grey[500],
+            size: 24,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.view_list),
-            label: 'Schedule',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle, size: 32),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assignment_outlined),
-            label: 'Assignme',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            label: 'Settings',
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? const Color(0xFF5B9FED) : Colors.grey[500],
+              fontSize: 11,
+            ),
           ),
         ],
       ),

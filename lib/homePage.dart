@@ -5,7 +5,7 @@ import 'package:reminder_apps/jadwal.dart';
 import 'package:reminder_apps/pengaturan.dart';
 import 'package:reminder_apps/tambahKelas.dart';
 import 'package:reminder_apps/tugas.dart';
-import 'splashScreen.dart';
+import 'package:reminder_apps/tugasBaru.dart';
 
 void main() async {
    WidgetsFlutterBinding.ensureInitialized();
@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF0A1929),
         fontFamily: 'SF Pro',
       ),
-      home: const ScheduleScreen(),
+      home: const HomepageScreen(),
     );
   }
 }
@@ -57,14 +57,14 @@ class TaskItem {
   TaskItem({required this.title, this.isCompleted = false});
 }
 
-class ScheduleScreen extends StatefulWidget {
-  const ScheduleScreen({Key? key}) : super(key: key);
+class HomepageScreen extends StatefulWidget {
+  const HomepageScreen({Key? key}) : super(key: key);
 
   @override
-  State<ScheduleScreen> createState() => _ScheduleScreenState();
+  State<HomepageScreen> createState() => _ScheduleScreenState();
 }
 
-class _ScheduleScreenState extends State<ScheduleScreen> {
+class _ScheduleScreenState extends State<HomepageScreen> {
   final List<ScheduleItem> schedules = [
     ScheduleItem(
       startTime: '08:02',
@@ -82,7 +82,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       endTime: '10:00',
       title: 'EC 203 - Principles Macroeconomics',
       room: 'Room 101',
-      color: Colors.teal,
+      color: const Color(0xFF009688),
     ),
   ];
 
@@ -314,7 +314,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           backgroundColor: const Color(0xFF5B9FED),
                         ),
                         onPressed: () {
-                          _showAddTaskDialog(schedule, setDialogState);
+                          _goToAddTaskPage();
                         },
                         child: const Text(
                           '+ Assignment',
@@ -333,53 +333,19 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   // ===== ADD ASSIGNMENT =====
-  void _showAddTaskDialog(
-    ScheduleItem schedule,
-    void Function(void Function()) setDialogState,
-  ) {
-    final controller = TextEditingController();
+  void _goToAddTaskPage() async {
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => TugasBaruScreen(),
+    ),
+  );
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1A2F42),
-          title: const Text('Tambah Assignment',
-              style: TextStyle(color: Colors.white)),
-          content: TextField(
-            controller: controller,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              hintText: 'Judul tugas',
-              hintStyle: TextStyle(color: Colors.grey[400]),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel',
-                  style: TextStyle(color: Colors.white)),
-            ),
-            TextButton(
-              onPressed: () {
-                if (controller.text.trim().isEmpty) return;
-
-                setDialogState(() {
-                  schedule.tasks ??= [];
-                  schedule.tasks!
-                      .add(TaskItem(title: controller.text.trim()));
-                });
-
-                Navigator.pop(context);
-              },
-              child:
-                  const Text('Add', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
-    );
+  if (result == true) {
+    setState(() {}); // refresh halaman sebelumnya
   }
+}
+
   int _selectedIndex = 0;
   // ===== BOTTOM BAR =====
   Widget _buildBottomNavBar() {
@@ -389,8 +355,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(Icons.calendar_today, 'Today', 0, ScheduleScreen()),
-          _buildNavItem(Icons.bar_chart, 'Chart', 1,JadwalScreen()),
+          _buildNavItem(Icons.calendar_today, 'Today', 0, HomepageScreen()),
+          _buildNavItem(Icons.view_list, 'Schedule', 1,JadwalScreen()),
           _buildNavItem(Icons.add_circle, 'Add', 2,TambahKelasScreen()),
           _buildNavItem(Icons.assignment, 'Assignment', 3,TugasPage()),
           _buildNavItem(Icons.settings, 'Settings', 4,PengaturanScreen())
@@ -403,7 +369,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     bool isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => page));
         setState(() {
           _selectedIndex = index;
         });
