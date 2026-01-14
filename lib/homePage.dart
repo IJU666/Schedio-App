@@ -6,6 +6,7 @@ import 'package:reminder_apps/pengaturan.dart';
 import 'package:reminder_apps/tambahKelas.dart';
 import 'package:reminder_apps/tugas.dart';
 import 'package:reminder_apps/tugasBaru.dart';
+import 'splashScreen.dart';
 
 void main() async {
    WidgetsFlutterBinding.ensureInitialized();
