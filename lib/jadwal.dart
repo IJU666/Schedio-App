@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
 
 class JadwalScreen extends StatelessWidget {
   const JadwalScreen({Key? key}) : super(key: key);
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
