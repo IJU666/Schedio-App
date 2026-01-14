@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/adapters.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:reminder_apps/jadwal.dart';
 import 'package:reminder_apps/pengaturan.dart';
 import 'package:reminder_apps/tambahKelas.dart';
 import 'package:reminder_apps/tugas.dart';
 import 'package:reminder_apps/tugasBaru.dart';
 
-void main() {
+void main() async {
+   WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
   runApp(const MyApp());
 }
 
@@ -16,7 +20,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
+      themeMode: ThemeMode.system,
+      theme: ThemeData.dark(),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF0A1929),
         fontFamily: 'SF Pro',
       ),

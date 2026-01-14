@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
 
 class JadwalScreen extends StatefulWidget {
   const JadwalScreen({Key? key}) : super(key: key);
-
+  
   @override
   State<JadwalScreen> createState() => _JadwalScreenState();
 }
