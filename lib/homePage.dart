@@ -59,7 +59,7 @@ class ScheduleScreen extends StatefulWidget {
 class _ScheduleScreenState extends State<ScheduleScreen> {
   final List<ScheduleItem> schedules = [
     ScheduleItem(
-      startTime: '08:01',
+      startTime: '08:02',
       endTime: '09:00',
       title: 'MGT 101 - Organization Management',
       room: 'Room 302',
