@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:reminder_apps/homePage.dart';
+import 'package:reminder_apps/jadwal.dart';
+import 'package:reminder_apps/pengaturan.dart';
+import 'package:reminder_apps/tambahKelas.dart';
+import 'package:reminder_apps/tugas.dart';
 
 void main() {
   runApp(const MyApp());
@@ -381,56 +386,59 @@ class _TugasBaruScreenState extends State<TugasBaruScreen> {
       ),
       
       // Bottom Navigation Bar
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF1A1F3A),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildNavItem(Icons.calendar_today, 'Today', false),
-                _buildNavItem(Icons.view_week, 'Schedule', false),
-                _buildAddButton(),
-                _buildNavItem(Icons.grid_view, 'Assignments', false),
-                _buildNavItem(Icons.settings, 'Settings', false),
-              ],
+      bottomNavigationBar: _buildBottomNavBar(),
+    );
+  }
+
+  int _selectedIndex = 0;
+  // ===== BOTTOM BAR =====
+  Widget _buildBottomNavBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      color: const Color(0xFF1A2F42),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildNavItem(Icons.calendar_today, 'Today', 0, HomepageScreen()),
+          _buildNavItem(Icons.view_list, 'Schedule', 1,JadwalScreen()),
+          _buildNavItem(Icons.add_circle, 'Add', 2,TambahKelasScreen()),
+          _buildNavItem(Icons.assignment, 'Assignment', 3,TugasPage()),
+          _buildNavItem(Icons.settings, 'Settings', 4,PengaturanScreen())
+        ]
+      ),  
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int index, Widget page) {
+    bool isSelected = _selectedIndex == index;
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => page));
+        setState(() {
+          _selectedIndex = index;
+        });
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: isSelected ? const Color(0xFF5B9FED) : Colors.grey[500],
+            size: 24,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? const Color(0xFF5B9FED) : Colors.grey[500],
+              fontSize: 11,
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, bool isSelected) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          color: isSelected ? const Color(0xFF6B7FFF) : Colors.grey,
-          size: 24,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            color: isSelected ? const Color(0xFF6B7FFF) : Colors.grey,
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildAddButton() {
     return Container(
