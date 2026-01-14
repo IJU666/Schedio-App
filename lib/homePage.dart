@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:reminder_apps/jadwal.dart';
+import 'package:reminder_apps/pengaturan.dart';
 import 'package:reminder_apps/tambahKelas.dart';
+import 'package:reminder_apps/tugas.dart';
 
 void main() {
   runApp(const MyApp());
@@ -378,21 +381,21 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(Icons.calendar_today, 'Today', 0),
-          _buildNavItem(Icons.bar_chart, 'Chart', 1),
-          _buildNavItem(Icons.add_circle, 'Add', 2),
-          _buildNavItem(Icons.assignment, 'Assignment', 3),
-          _buildNavItem(Icons.settings, 'Settings', 4)
+          _buildNavItem(Icons.calendar_today, 'Today', 0, ScheduleScreen()),
+          _buildNavItem(Icons.bar_chart, 'Chart', 1,JadwalScreen()),
+          _buildNavItem(Icons.add_circle, 'Add', 2,TambahKelasScreen()),
+          _buildNavItem(Icons.assignment, 'Assignment', 3,TugasPage()),
+          _buildNavItem(Icons.settings, 'Settings', 4,PengaturanScreen())
         ]
-      ),
+      ),  
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, int index) {
+  Widget _buildNavItem(IconData icon, String label, int index, Widget page) {
     bool isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => TambahKelasScreen()));
+        Navigator.push(context, MaterialPageRoute(builder: (_) => page));
         setState(() {
           _selectedIndex = index;
         });
