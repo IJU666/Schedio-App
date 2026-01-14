@@ -445,7 +445,7 @@ void _showSuccessDialog() {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.assignment_outlined),
-            label: 'Assignme',
+            label: 'Assignment',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings_outlined),
