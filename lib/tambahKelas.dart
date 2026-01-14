@@ -24,7 +24,8 @@ class MyApp extends StatelessWidget {
 
 class TambahKelasScreen extends StatefulWidget {
   const TambahKelasScreen({Key? key}) : super(key: key);
-
+  
+  
   @override
   State<TambahKelasScreen> createState() => _TambahKelasScreenState();
 }
@@ -36,10 +37,10 @@ class _TambahKelasScreenState extends State<TambahKelasScreen> {
   final TextEditingController _waktuSelesaiController = TextEditingController();
   
   int _selectedDay = 2;
-  String _selectedPeriod = 'Senin';
   Color _selectedColor = const Color(0xFF5B9FFF);
   double _brightnessValue = 1.0;
   int _selectedBottomNavIndex = 0;
+  DateTime _selectedDate = DateTime(2025, 12, 2);
   
   final List<Color> _presetColors = [
     const Color(0xFF5B9FFF),
@@ -51,22 +52,99 @@ class _TambahKelasScreenState extends State<TambahKelasScreen> {
     const Color(0xFFB794F6),
   ];
 
-  final List<Map<String, dynamic>> _daysOfWeek = [
-    {'day': 2, 'name': 'Selasa', 'badge': 2},
-    {'day': 3, 'name': 'Rabu', 'badge': 1},
-    {'day': 4, 'name': 'Kamis', 'badge': null},
-    {'day': 5, 'name': 'Jumat', 'badge': 3},
-    {'day': 6, 'name': 'Sabtu', 'badge': null},
-  ];
+  List<Map<String, dynamic>> _daysOfWeek = [];
+
+  void _initializeDaysOfWeek() {
+    // Get the dates around the selected date
+    List<Map<String, dynamic>> days = [];
+    
+    for (int i = -2; i <= 2; i++) {
+      DateTime date = _selectedDate.add(Duration(days: i));
+      String dayName = _getDayName(date.weekday);
+      
+      days.add({
+        'day': date.day,
+        'name': dayName,
+        'date': date,
+      });
+    }
+    
+    _daysOfWeek = days;
+  }
+  
+  String _getDayName(int weekday) {
+    switch (weekday) {
+      case 1: return 'Senin';
+      case 2: return 'Selasa';
+      case 3: return 'Rabu';
+      case 4: return 'Kamis';
+      case 5: return 'Jumat';
+      case 6: return 'Sabtu';
+      case 7: return 'Minggu';
+      default: return '';
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    _initializeDaysOfWeek();
     _mataKuliahController.text = 'Multimedia';
     _ruanganController.text = 'Ruangan 8.03';
     _waktuMulaiController.text = '00.00';
     _waktuSelesaiController.text = '23.59';
   }
+void _showSuccessDialog() {
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (context) {
+      return Dialog(
+        backgroundColor: const Color(0xFF1A1F3A),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF5AE55A),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check,
+                  color: Colors.white,
+                  size: 36,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Data Berhasil Ditambahkan',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+
+  Future.delayed(const Duration(milliseconds: 1500), () {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+  });
+}
 
   @override
   Widget build(BuildContext context) {
@@ -210,38 +288,6 @@ class _TambahKelasScreenState extends State<TambahKelasScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1A1F3A),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: DropdownButton<String>(
-                              value: _selectedPeriod,
-                              dropdownColor: const Color(0xFF1A1F3A),
-                              underline: const SizedBox(),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                              style: const TextStyle(color: Colors.white),
-                              icon: const Icon(
-                                Icons.keyboard_arrow_down,
-                                color: Color(0xFF8B8B9E),
-                              ),
-                              items: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']
-                                  .map((String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                );
-                              }).toList(),
-                              onChanged: (String? newValue) {
-                                if (newValue != null) {
-                                  setState(() {
-                                    _selectedPeriod = newValue;
-                                  });
-                                }
-                              },
-                            ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -336,63 +382,6 @@ class _TambahKelasScreenState extends State<TambahKelasScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      
-                      // Hue Slider (Color Spectrum)
-                      SliderTheme(
-                        data: SliderThemeData(
-                          trackHeight: 8,
-                          thumbShape: const RoundSliderThumbShape(
-                            enabledThumbRadius: 10,
-                          ),
-                          overlayShape: const RoundSliderOverlayShape(
-                            overlayRadius: 20,
-                          ),
-                          activeTrackColor: Colors.transparent,
-                          inactiveTrackColor: Colors.transparent,
-                          thumbColor: Colors.white,
-                        ),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Container(
-                              height: 8,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(4),
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF5B9FFF),
-                                    Color(0xFF4ECDC4),
-                                    Color(0xFF5AE55A),
-                                    Color(0xFFFFEB3B),
-                                    Color(0xFFFF8C42),
-                                    Color(0xFFFF5252),
-                                    Color(0xFFFF6B9D),
-                                    Color(0xFFB794F6),
-                                    Color(0xFF5B9FFF),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Slider(
-                              value: HSVColor.fromColor(_selectedColor).hue / 360,
-                              min: 0.0,
-                              max: 1.0,
-                              onChanged: (value) {
-                                setState(() {
-                                  final hsvColor = HSVColor.fromColor(_selectedColor);
-                                  _selectedColor = HSVColor.fromAHSV(
-                                    1.0,
-                                    value * 360,
-                                    hsvColor.saturation,
-                                    hsvColor.value,
-                                  ).toColor();
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
                       const SizedBox(height: 32),
                       
                       // Simpan Button
@@ -400,18 +389,10 @@ class _TambahKelasScreenState extends State<TambahKelasScreen> {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {
-                            // Show selected color info
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Warna dipilih: ${_selectedColor.value.toRadixString(16).toUpperCase()}',
-                                ),
-                                backgroundColor: _selectedColor,
-                              ),
-                            );
+ _showSuccessDialog();
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _selectedColor,
+                            backgroundColor: const Color(0xFF80B3FF),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
@@ -464,7 +445,7 @@ class _TambahKelasScreenState extends State<TambahKelasScreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.assignment_outlined),
-            label: 'Assignme',
+            label: 'Assignment',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings_outlined),
@@ -476,92 +457,121 @@ class _TambahKelasScreenState extends State<TambahKelasScreen> {
   }
 
   Widget _buildCalendarHeader() {
+    final months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    
     return Container(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          const Text(
-            '2 Desember 2025',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+          GestureDetector(
+            onTap: () async {
+              final DateTime? picked = await showDatePicker(
+                context: context,
+                initialDate: _selectedDate,
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2030),
+                builder: (context, child) {
+                  return Theme(
+                    data: Theme.of(context).copyWith(
+                      colorScheme: const ColorScheme.dark(
+                        primary: Color(0xFF5B9FFF),
+                        onPrimary: Colors.white,
+                        surface: Color(0xFF1A1F3A),
+                        onSurface: Colors.white,
+                      ),
+                      dialogBackgroundColor: const Color(0xFF0A0E27),
+                    ),
+                    child: child!,
+                  );
+                },
+              );
+              
+              if (picked != null && picked != _selectedDate) {
+                setState(() {
+                  _selectedDate = picked;
+                  _selectedDay = picked.day;
+                  _initializeDaysOfWeek(); // Update the days list
+                });
+              }
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '${_selectedDate.day} ${months[_selectedDate.month - 1]} ${_selectedDate.year}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(
+                  Icons.calendar_today,
+                  color: Color(0xFF5B9FFF),
+                  size: 18,
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: _daysOfWeek.map((dayData) {
-              bool isSelected = dayData['day'] == _selectedDay;
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedDay = dayData['day'];
-                  });
-                },
-                child: Container(
-                  width: 60,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF5B9FFF) : const Color(0xFF1A1F3A),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Stack(
-                    children: [
-                      Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              '${dayData['day']}',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: isSelected ? Colors.white : const Color(0xFF8B8B9E),
-                              ),
-                            ),
-                            Text(
-                              dayData['name'],
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isSelected ? Colors.white : const Color(0xFF8B8B9E),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (dayData['badge'] != null)
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFFF5252),
-                              shape: BoxShape.circle,
-                            ),
-                            constraints: const BoxConstraints(
-                              minWidth: 20,
-                              minHeight: 20,
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${dayData['badge']}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
+SizedBox(
+  height: 70,
+  child: Row(
+    children: _daysOfWeek.map((dayData) {
+      bool isSelected = dayData['day'] == _selectedDay;
+
+      return Expanded(
+        child: GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedDay = dayData['day'];
+              _selectedDate = dayData['date'];
+              _initializeDaysOfWeek();
+            });
+          },
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? const Color(0xFF5B9FFF)
+                  : const Color(0xFF1A1F3A),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '${dayData['day']}',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected
+                        ? Colors.white
+                        : const Color(0xFF8B8B9E),
                   ),
                 ),
-              );
-            }).toList(),
+                Text(
+                  dayData['name'],
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isSelected
+                        ? Colors.white
+                        : const Color(0xFF8B8B9E),
+                  ),
+                ),
+              ],
+            ),
           ),
+        ),
+      );
+    }).toList(),
+  ),
+),
+
         ],
       ),
     );
