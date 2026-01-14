@@ -92,7 +92,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     ScheduleItem(
       startTime: '11:10 AM',
       endTime: '12:00 AM',
-      title: 'FN 215 - Financial Management',
+      title: 'FN 210 - Financial Management',
       room: 'Room 101',
       color: Colors.blue,
     ),
