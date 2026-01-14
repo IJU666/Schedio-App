@@ -21,8 +21,112 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class JadwalScreen extends StatelessWidget {
+class JadwalScreen extends StatefulWidget {
   const JadwalScreen({Key? key}) : super(key: key);
+
+  @override
+  State<JadwalScreen> createState() => _JadwalScreenState();
+}
+
+class _JadwalScreenState extends State<JadwalScreen> {
+  int _selectedDateIndex = 0;
+  int _selectedNavIndex = 0;
+  
+  final List<Map<String, String>> _dates = [
+    {'date': '2', 'day': 'Selasa'},
+    {'date': '3', 'day': 'Rabu'},
+    {'date': '4', 'day': 'Kamis'},
+    {'date': '5', 'day': 'Jumat'},
+    {'date': '6', 'day': 'Sabtu'},
+  ];
+
+  // Data jadwal untuk setiap hari
+  final Map<int, List<List<ScheduleItem?>>> _scheduleData = {
+    0: [ // Selasa
+      [
+        ScheduleItem('Org\nMgt', 'Room 101', const Color(0xFFFFD88D), 1),
+        ScheduleItem('Financial\nMgt', 'Room 101', const Color(0xFF6B7FFF), 1),
+        null,
+        null,
+        ScheduleItem('Micro', 'Room 101', const Color(0xFFB457FF), 1),
+      ],
+      [
+        ScheduleItem('Macro', 'Room 101', const Color(0xFF4ECDC4), 1),
+        null,
+        ScheduleItem('Macro', 'Room 101', const Color(0xFF6B7FFF), 1),
+        ScheduleItem('Org\nMgt', 'Room 101', const Color(0xFFFFD88D), 1),
+        ScheduleItem('Org\nMgt', 'Room 101', const Color(0xFFFFB86C), 1),
+      ],
+      [
+        ScheduleItem('Micro', 'Room 101', const Color(0xFFB457FF), 1),
+        ScheduleItem('Org\nMgt', 'Room 101', const Color(0xFFFFB86C), 1),
+        ScheduleItem('Micro', 'Room 101', const Color(0xFFB457FF), 2),
+        ScheduleItem('Micro', 'Room 101', const Color(0xFFB457FF), 1),
+        ScheduleItem('Macro', 'Room 101', const Color(0xFF4ECDC4), 4),
+      ],
+      [
+        ScheduleItem('Financial\nMgt', 'Room 101', const Color(0xFF6B7FFF), 3),
+        null,
+        null,
+        null,
+        null,
+      ],
+      [null, null, null, null, null],
+      [null, null, null, null, null],
+    ],
+    1: [ // Rabu
+      [
+        ScheduleItem('Financial\nMgt', 'Room 202', const Color(0xFF6B7FFF), 1),
+        ScheduleItem('Macro', 'Room 101', const Color(0xFF4ECDC4), 1),
+        null,
+        ScheduleItem('Micro', 'Room 101', const Color(0xFFB457FF), 1),
+        null,
+      ],
+      [null, null, null, null, null],
+      [null, null, null, null, null],
+      [null, null, null, null, null],
+      [null, null, null, null, null],
+      [null, null, null, null, null],
+    ],
+    2: [ // Kamis
+      [
+        null,
+        ScheduleItem('Org\nMgt', 'Room 101', const Color(0xFFFFD88D), 2),
+        ScheduleItem('Financial\nMgt', 'Room 202', const Color(0xFF6B7FFF), 1),
+        null,
+        null,
+      ],
+      [null, null, null, null, null],
+      [null, null, null, null, null],
+      [null, null, null, null, null],
+      [null, null, null, null, null],
+      [null, null, null, null, null],
+    ],
+    3: [ // Jumat
+      [null, null, null, null, null],
+      [
+        ScheduleItem('Macro', 'Room 101', const Color(0xFF4ECDC4), 1),
+        null,
+        null,
+        ScheduleItem('Micro', 'Room 101', const Color(0xFFB457FF), 1),
+        null,
+      ],
+      [null, null, null, null, null],
+      [null, null, null, null, null],
+      [null, null, null, null, null],
+      [null, null, null, null, null],
+    ],
+    4: [ // Sabtu
+      [null, null, null, null, null],
+      [null, null, null, null, null],
+      [null, null, null, null, null],
+      [null, null, null, null, null],
+      [null, null, null, null, null],
+      [null, null, null, null, null],
+    ],
+  };
+
+  final List<String> _timeSlots = ['09\nAM', '10\nAM', '11\nAM', '12\nPM', '01\nPM', '02\nPM'];
 
   @override
   Widget build(BuildContext context) {
@@ -54,13 +158,20 @@ class JadwalScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildDateTab('2', 'Selasa', true),
-                  _buildDateTab('3', 'Rabu', false),
-                  _buildDateTab('4', 'Kamis', false),
-                  _buildDateTab('5', 'Jumat', false),
-                  _buildDateTab('6', 'Sabtu', false),
-                ],
+                children: List.generate(_dates.length, (index) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedDateIndex = index;
+                      });
+                    },
+                    child: _buildDateTab(
+                      _dates[index]['date']!,
+                      _dates[index]['day']!,
+                      _selectedDateIndex == index,
+                    ),
+                  );
+                }),
               ),
             ),
             
@@ -72,55 +183,12 @@ class JadwalScreen extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
-                    children: [
-                      _buildTimeRow('09\nAM', [
-                        ScheduleItem('Org\nMgt', 'Room 101', const Color(0xFFFFD88D), 1),
-                        ScheduleItem('Financial\nMgt', 'Room 101', const Color(0xFF6B7FFF), 1),
-                        null,
-                        null,
-                        ScheduleItem('Micro', 'Room 101', const Color(0xFFB457FF), 1),
-                      ]),
-                      
-                      _buildTimeRow('10\nAM', [
-                        ScheduleItem('Macro', 'Room 101', const Color(0xFF4ECDC4), 1),
-                        null,
-                        ScheduleItem('Macro', 'Room 101', const Color(0xFF6B7FFF), 1),
-                        ScheduleItem('Org\nMgt', 'Room 101', const Color(0xFFFFD88D), 1),
-                        ScheduleItem('Org\nMgt', 'Room 101', const Color(0xFFFFB86C), 1),
-                      ]),
-                      
-                      _buildTimeRow('11\nAM', [
-                        ScheduleItem('Micro', 'Room 101', const Color(0xFFB457FF), 1),
-                        ScheduleItem('Org\nMgt', 'Room 101', const Color(0xFFFFB86C), 1),
-                        ScheduleItem('Micro', 'Room 101', const Color(0xFFB457FF), 2),
-                        ScheduleItem('Micro', 'Room 101', const Color(0xFFB457FF), 1),
-                        ScheduleItem('Macro', 'Room 101', const Color(0xFF4ECDC4), 4),
-                      ]),
-                      
-                      _buildTimeRow('12\nPM', [
-                        ScheduleItem('Financial\nMgt', 'Room 101', const Color(0xFF6B7FFF), 3),
-                        null,
-                        null,
-                        null,
-                        null,
-                      ]),
-                      
-                      _buildTimeRow('01\nPM', [
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                      ]),
-                      
-                      _buildTimeRow('02\nPM', [
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                      ]),
-                    ],
+                    children: List.generate(_timeSlots.length, (index) {
+                      return _buildTimeRow(
+                        _timeSlots[index],
+                        _scheduleData[_selectedDateIndex]![index],
+                      );
+                    }),
                   ),
                 ),
               ),
@@ -147,11 +215,11 @@ class JadwalScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildNavItem(Icons.calendar_today, 'Today', true),
-                _buildNavItem(Icons.view_week, 'Schedule', false),
+                _buildNavItem(Icons.calendar_today, 'Today', 0),
+                _buildNavItem(Icons.view_week, 'Schedule', 1),
                 _buildAddButton(),
-                _buildNavItem(Icons.grid_view, 'Assignme', false),
-                _buildNavItem(Icons.settings, 'Settings', false),
+                _buildNavItem(Icons.grid_view, 'Assignme', 2),
+                _buildNavItem(Icons.settings, 'Settings', 3),
               ],
             ),
           ),
@@ -220,35 +288,40 @@ class JadwalScreen extends StatelessWidget {
                   );
                 }
                 return Expanded(
-                  child: Container(
-                    height: item.height * 80.0,
-                    margin: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: item.color,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.all(8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          item.title,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                            height: 1.1,
+                  child: GestureDetector(
+                    onTap: () {
+                      _showScheduleDetails(item);
+                    },
+                    child: Container(
+                      height: item.height * 80.0,
+                      margin: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: item.color,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            item.title,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                              height: 1.1,
+                            ),
                           ),
-                        ),
-                        Text(
-                          item.room,
-                          style: const TextStyle(
-                            fontSize: 9,
-                            color: Colors.black87,
+                          Text(
+                            item.room,
+                            style: const TextStyle(
+                              fontSize: 9,
+                              color: Colors.black87,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -260,46 +333,145 @@ class JadwalScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, bool isSelected) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          color: isSelected ? const Color(0xFF6B7FFF) : Colors.grey,
-          size: 24,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    final isSelected = _selectedNavIndex == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedNavIndex = index;
+        });
+        _handleNavigation(index);
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
             color: isSelected ? const Color(0xFF6B7FFF) : Colors.grey,
+            size: 24,
           ),
-        ),
-      ],
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: isSelected ? const Color(0xFF6B7FFF) : Colors.grey,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildAddButton() {
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        color: const Color(0xFF6B7FFF),
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF6B7FFF).withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+    return GestureDetector(
+      onTap: () {
+        _showAddScheduleDialog();
+      },
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: const Color(0xFF6B7FFF),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6B7FFF).withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
+          size: 28,
+        ),
+      ),
+    );
+  }
+
+  void _showScheduleDetails(ScheduleItem item) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1F3A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          item.title.replaceAll('\n', ' '),
+          style: const TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Ruangan: ${item.room}',
+              style: const TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Durasi: ${item.height} jam',
+              style: const TextStyle(color: Colors.white70),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Tutup', style: TextStyle(color: Color(0xFF6B7FFF))),
           ),
         ],
       ),
-      child: const Icon(
-        Icons.add,
-        color: Colors.white,
-        size: 28,
+    );
+  }
+
+  void _showAddScheduleDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1F3A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Tambah Jadwal',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Fitur tambah jadwal akan segera hadir!',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK', style: TextStyle(color: Color(0xFF6B7FFF))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleNavigation(int index) {
+    String message = '';
+    switch (index) {
+      case 0:
+        message = 'Menampilkan jadwal hari ini';
+        break;
+      case 1:
+        message = 'Menampilkan semua jadwal';
+        break;
+      case 2:
+        message = 'Menampilkan tugas';
+        break;
+      case 3:
+        message = 'Membuka pengaturan';
+        break;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 1),
+        backgroundColor: const Color(0xFF2A2F4F),
       ),
     );
   }
