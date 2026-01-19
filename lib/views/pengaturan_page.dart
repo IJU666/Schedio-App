@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:reminder_apps/homePage.dart';
-import 'package:reminder_apps/jadwal.dart';
-import 'package:reminder_apps/tugas.dart';
-import 'package:reminder_apps/tambahKelas.dart';
-
-void main() {
+import 'package:intl/intl.dart';
+import '../controllers/jadwal_controller.dart';
+import '../controllers/tugas_controller.dart';
+import '../controllers/mata_kuliah_controller.dart';
+import '../models/jadwal.dart';
+import '../models/tugas.dart';
+import '../models/mata_kuliah.dart';
+import 'tambah_tugas_page.dart';
+import 'tambah_kelas_page.dart';
+import 'edit_kelas_page.dart';
+import 'daftar_tugas_page.dart';
+import 'home_page.dart';
+import 'kalender_page.dart';void main() {
   runApp(const MyApp());
 }
 
@@ -20,19 +27,19 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF0A0E27),
         primaryColor: const Color(0xFF0A0E27),
       ),
-      home: const PengaturanScreen(),
+      home: const PengaturanPage(),
     );
   }
 }
 
-class PengaturanScreen extends StatefulWidget {
-  const PengaturanScreen({Key? key}) : super(key: key);
+class PengaturanPage extends StatefulWidget {
+  const PengaturanPage({Key? key}) : super(key: key);
 
   @override
-  State<PengaturanScreen> createState() => _PengaturanScreenState();
+  State<PengaturanPage> createState() => _PengaturanPageState();
 }
 
-class _PengaturanScreenState extends State<PengaturanScreen> {
+class _PengaturanPageState extends State<PengaturanPage> {
   bool isPengingatEnabled = true;
   bool isDarkModeEnabled = true;
 
@@ -303,11 +310,11 @@ class _PengaturanScreenState extends State<PengaturanScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(Icons.calendar_today, 'Today', 0, HomepageScreen()),
-          _buildNavItem(Icons.view_list, 'Schedule', 1,JadwalScreen()),
-          _buildNavItem(Icons.add_circle, 'Add', 2,TambahKelasScreen()),
-          _buildNavItem(Icons.assignment, 'Assignment', 3,TugasPage()),
-          _buildNavItem(Icons.settings, 'Settings', 4,PengaturanScreen())
+          _buildNavItem(Icons.calendar_today, 'Today', 0, HomePage()),
+          _buildNavItem(Icons.view_list, 'Schedule', 1,KalenderPage()),
+          _buildNavItem(Icons.add_circle, 'Add', 2,TambahKelasPage()),
+          _buildNavItem(Icons.assignment, 'Assignment', 3,DaftarTugasPage()),
+          _buildNavItem(Icons.settings, 'Settings', 4,PengaturanPage())
         ]
       ),  
     );
