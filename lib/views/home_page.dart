@@ -1,18 +1,21 @@
-// home_page.dart
+// views/home_page.dart
+// ========================================
+// HOME PAGE - DENGAN THEME SUPPORT
+// ========================================
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../controllers/jadwal_controller.dart';
 import '../controllers/tugas_controller.dart';
 import '../controllers/mata_kuliah_controller.dart';
+import '../controllers/navigation_controller.dart';
 import '../models/jadwal.dart';
 import '../models/tugas.dart';
 import '../models/mata_kuliah.dart';
+import '../widgets/modern_bottom_navbar.dart';
 import 'tambah_tugas_page.dart';
 import 'tambah_kelas_page.dart';
 import 'edit_kelas_page.dart';
-import 'daftar_tugas_page.dart';
-import 'kalender_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -25,60 +28,67 @@ class _HomePageState extends State<HomePage> {
   final JadwalController _jadwalController = JadwalController();
   final TugasController _tugasController = TugasController();
   final MataKuliahController _mataKuliahController = MataKuliahController();
-  
+  final NavigationController _navigationController = NavigationController();
   DateTime selectedDate = DateTime.now();
-  int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _navigationController.setIndex(0);
+  }
+
+  @override
+  void dispose() {
+    _navigationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Ambil warna dari theme
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).colorScheme.onSurface;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF1E2936),
+      backgroundColor: bgColor,
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
-            _buildHeader(),
-            _buildDateSelector(),
+            _buildHeader(textColor),
+            _buildDateSelector(isDarkMode, cardColor, textColor),
             Expanded(
-              child: _buildScheduleList(),
+              child: _buildScheduleList(isDarkMode, cardColor, textColor),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
-      floatingActionButton: Container(
-        width: 65,
-        height: 65,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: const Color(0xFF7AB8FF),
-        ),
-        child: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const TambahKelasPage()),
-            ).then((_) => setState(() {}));
-          },
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          child: const Icon(Icons.add, color: Colors.white, size: 32),
-        ),
+      bottomNavigationBar: ModernBottomNavbar(
+        controller: _navigationController,
+        currentIndex: 0,
+        onAddPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const TambahKelasPage()),
+          ).then((_) => setState(() {}));
+        },
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(Color textColor) {
     return Container(
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
           Text(
             DateFormat('d MMMM yyyy', 'id_ID').format(selectedDate),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: textColor,
             ),
           ),
         ],
@@ -86,7 +96,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildDateSelector() {
+  Widget _buildDateSelector(bool isDarkMode, Color cardColor, Color textColor) {
     final today = DateTime.now();
     final dates = List.generate(7, (index) {
       return today.add(Duration(days: index - 1));
@@ -97,8 +107,8 @@ class _HomePageState extends State<HomePage> {
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final itemWidth = (constraints.maxWidth - (15 * (dates.length - 1))) / dates.length;
-          
+          final itemWidth = (constraints.maxWidth - (15 * (dates.length - 1))) /
+              dates.length;
           return ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: dates.length,
@@ -107,7 +117,6 @@ class _HomePageState extends State<HomePage> {
               final isSelected = date.day == selectedDate.day &&
                   date.month == selectedDate.month &&
                   date.year == selectedDate.year;
-              
               final tugasCount = _tugasController.getTugasByDate(date).length;
               final hasNotification = tugasCount > 0;
 
@@ -117,12 +126,25 @@ class _HomePageState extends State<HomePage> {
                     selectedDate = date;
                   });
                 },
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
                   width: itemWidth,
                   margin: EdgeInsets.only(right: index < dates.length - 1 ? 15 : 0),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF7AB8FF) : const Color(0xFF2A3947),
+                    color: isSelected 
+                        ? const Color(0xFF7AB8FF) 
+                        : cardColor,
                     borderRadius: BorderRadius.circular(15),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFF7AB8FF).withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : [],
                   ),
                   child: Center(
                     child: Column(
@@ -133,7 +155,9 @@ class _HomePageState extends State<HomePage> {
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.white : Colors.grey[400],
+                            color: isSelected 
+                                ? Colors.white 
+                                : (isDarkMode ? Colors.grey[400] : Colors.grey[700]),
                           ),
                         ),
                         const SizedBox(height: 5),
@@ -144,7 +168,9 @@ class _HomePageState extends State<HomePage> {
                               DateFormat('EEE', 'id_ID').format(date),
                               style: TextStyle(
                                 fontSize: 12,
-                                color: isSelected ? Colors.white : Colors.grey[500],
+                                color: isSelected
+                                    ? Colors.white
+                                    : (isDarkMode ? Colors.grey[500] : Colors.grey[600]),
                               ),
                             ),
                             if (hasNotification) ...[
@@ -182,50 +208,45 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildScheduleList() {
+  Widget _buildScheduleList(bool isDarkMode, Color cardColor, Color textColor) {
     final hariIni = DateFormat('EEEE', 'id_ID').format(selectedDate);
     final jadwalHariIni = _jadwalController.getJadwalByHari(hariIni);
     final tugasHariIni = _tugasController.getTugasByDate(selectedDate);
 
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
       children: [
-        // Section Mata Kuliah
         if (jadwalHariIni.isNotEmpty) ...[
-          const Padding(
-            padding: EdgeInsets.only(bottom: 15),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 15),
             child: Text(
               'Mata Kuliah',
               style: TextStyle(
-                color: Colors.white,
+                color: textColor,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          ...jadwalHariIni.map((jadwal) => _buildJadwalCard(jadwal)),
+          ...jadwalHariIni.map((jadwal) => _buildJadwalCard(jadwal, isDarkMode, cardColor, textColor)),
         ],
-        
-        // Section Tugas
         if (tugasHariIni.isNotEmpty) ...[
           Padding(
             padding: EdgeInsets.only(
               top: jadwalHariIni.isNotEmpty ? 20 : 0,
               bottom: 15,
             ),
-            child: const Text(
+            child: Text(
               'Tugas',
               style: TextStyle(
-                color: Colors.white,
+                color: textColor,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          ...tugasHariIni.map((tugas) => _buildTugasCard(tugas)),
+          ...tugasHariIni.map((tugas) => _buildTugasCard(tugas, isDarkMode, cardColor, textColor)),
         ],
-        
-        // Empty state
         if (jadwalHariIni.isEmpty && tugasHariIni.isEmpty)
           Center(
             child: Padding(
@@ -233,7 +254,7 @@ class _HomePageState extends State<HomePage> {
               child: Text(
                 'Tidak ada jadwal atau tugas hari ini',
                 style: TextStyle(
-                  color: Colors.grey[500],
+                  color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
                   fontSize: 16,
                 ),
                 textAlign: TextAlign.center,
@@ -244,17 +265,25 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildJadwalCard(Jadwal jadwal) {
+  Widget _buildJadwalCard(Jadwal jadwal, bool isDarkMode, Color cardColor, Color textColor) {
     final mataKuliah = _mataKuliahController.getMataKuliahById(jadwal.mataKuliahId);
     bool isExpanded = false;
-    
+
     return StatefulBuilder(
       builder: (context, setCardState) {
-        return Container(
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
           margin: const EdgeInsets.only(bottom: 15),
           decoration: BoxDecoration(
-            color: const Color(0xFF2A3947),
+            color: cardColor,
             borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             children: [
@@ -271,7 +300,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Icon(
                         isExpanded ? Icons.keyboard_arrow_down : Icons.chevron_right,
-                        color: Colors.white,
+                        color: textColor,
                         size: 24,
                       ),
                       const SizedBox(width: 10),
@@ -280,8 +309,8 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           Text(
                             jadwal.jamMulai,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: textColor,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
@@ -290,7 +319,7 @@ class _HomePageState extends State<HomePage> {
                           Text(
                             jadwal.jamSelesai,
                             style: TextStyle(
-                              color: Colors.grey[500],
+                              color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
                               fontSize: 14,
                             ),
                           ),
@@ -313,7 +342,7 @@ class _HomePageState extends State<HomePage> {
                             Text(
                               jadwal.ruangan,
                               style: TextStyle(
-                                color: Colors.grey[500],
+                                color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
                                 fontSize: 14,
                               ),
                             ),
@@ -323,7 +352,7 @@ class _HomePageState extends State<HomePage> {
                                 child: Text(
                                   mataKuliah.dosen,
                                   style: TextStyle(
-                                    color: Colors.grey[400],
+                                    color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
                                     fontSize: 13,
                                   ),
                                 ),
@@ -349,18 +378,17 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Divider(color: Colors.grey),
+                      Divider(color: isDarkMode ? Colors.grey : Colors.grey[300]),
                       const SizedBox(height: 10),
                       _buildDropdownButton(
                         icon: Icons.edit,
                         label: 'Edit Kelas',
+                        isDarkMode: isDarkMode,
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => EditKelasPage(
-                                jadwalId: jadwal.id,
-                              ),
+                              builder: (context) => EditKelasPage(jadwalId: jadwal.id),
                             ),
                           ).then((_) => setState(() {}));
                         },
@@ -369,6 +397,7 @@ class _HomePageState extends State<HomePage> {
                       _buildDropdownButton(
                         icon: Icons.assignment_add,
                         label: 'Tambah Tugas',
+                        isDarkMode: isDarkMode,
                         onTap: () {
                           Navigator.push(
                             context,
@@ -383,6 +412,7 @@ class _HomePageState extends State<HomePage> {
                         icon: Icons.delete,
                         label: 'Hapus Kelas',
                         color: const Color(0xFFFF6B6B),
+                        isDarkMode: isDarkMode,
                         onTap: () {
                           _showDeleteDialog(jadwal.id, mataKuliah?.id);
                         },
@@ -397,16 +427,24 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildTugasCard(Tugas tugas) {
+  Widget _buildTugasCard(Tugas tugas, bool isDarkMode, Color cardColor, Color textColor) {
     bool isExpanded = false;
-    
+
     return StatefulBuilder(
       builder: (context, setCardState) {
-        return Container(
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
           margin: const EdgeInsets.only(bottom: 15),
           decoration: BoxDecoration(
-            color: const Color(0xFF2A3947),
+            color: cardColor,
             borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             children: [
@@ -446,16 +484,16 @@ class _HomePageState extends State<HomePage> {
                       Text(
                         tugas.judul,
                         style: TextStyle(
-                          color: Colors.grey[400],
+                          color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
                           fontSize: 14,
                         ),
                       ),
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          const Text(
+                          Text(
                             'Tugas ',
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(color: textColor),
                           ),
                           if (tugas.isPrioritas)
                             Container(
@@ -485,19 +523,19 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Divider(color: Colors.grey),
+                      Divider(color: isDarkMode ? Colors.grey : Colors.grey[300]),
                       const SizedBox(height: 10),
                       _buildDropdownButton(
                         icon: Icons.edit,
                         label: 'Edit Tugas',
-                        onTap: () {
-                          // Navigate to edit tugas page
-                        },
+                        isDarkMode: isDarkMode,
+                        onTap: () {},
                       ),
                       const SizedBox(height: 10),
                       _buildDropdownButton(
                         icon: Icons.checklist,
                         label: 'Lihat Checklist',
+                        isDarkMode: isDarkMode,
                         onTap: () {
                           _showTugasDialog(tugas);
                         },
@@ -507,6 +545,7 @@ class _HomePageState extends State<HomePage> {
                         icon: Icons.delete,
                         label: 'Hapus Tugas',
                         color: const Color(0xFFFF6B6B),
+                        isDarkMode: isDarkMode,
                         onTap: () {
                           _showDeleteTugasDialog(tugas.id);
                         },
@@ -524,6 +563,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildDropdownButton({
     required IconData icon,
     required String label,
+    required bool isDarkMode,
     required VoidCallback onTap,
     Color? color,
   }) {
@@ -533,7 +573,7 @@ class _HomePageState extends State<HomePage> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E2936),
+          color: isDarkMode ? const Color(0xFF1E2936) : Colors.grey[100],
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -543,7 +583,7 @@ class _HomePageState extends State<HomePage> {
             Text(
               label,
               style: TextStyle(
-                color: color ?? Colors.white,
+                color: color ?? (isDarkMode ? Colors.white : const Color(0xFF1E2936)),
                 fontSize: 15,
               ),
             ),
@@ -554,17 +594,19 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showDeleteDialog(String jadwalId, String? mataKuliahId) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF2A3947),
-        title: const Text(
+        backgroundColor: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
+        title: Text(
           'Hapus Kelas',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
         ),
-        content: const Text(
+        content: Text(
           'Apakah Anda yakin ingin menghapus kelas ini?',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
         ),
         actions: [
           TextButton(
@@ -597,17 +639,19 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showDeleteTugasDialog(String tugasId) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF2A3947),
-        title: const Text(
+        backgroundColor: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
+        title: Text(
           'Hapus Tugas',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
         ),
-        content: const Text(
+        content: Text(
           'Apakah Anda yakin ingin menghapus tugas ini?',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
         ),
         actions: [
           TextButton(
@@ -637,11 +681,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showTugasDialog(Tugas tugas) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => Dialog(
-          backgroundColor: const Color(0xFF2A3947),
+          backgroundColor: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -653,16 +699,19 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Row(
                   children: [
-                    const Text(
+                    Text(
                       '08:00',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
                         fontSize: 16,
                       ),
                     ),
                     const Spacer(),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
+                      icon: Icon(
+                        Icons.close,
+                        color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
+                      ),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
@@ -689,16 +738,18 @@ class _HomePageState extends State<HomePage> {
                 Text(
                   'Room 302',
                   style: TextStyle(
-                    color: Colors.grey[500],
+                    color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
                     fontSize: 14,
                   ),
                 ),
                 const SizedBox(height: 20),
                 Row(
                   children: [
-                    const Text(
+                    Text(
                       'Tugas ',
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
+                      ),
                     ),
                     if (tugas.isPrioritas)
                       Container(
@@ -722,21 +773,17 @@ class _HomePageState extends State<HomePage> {
                 ...List.generate(tugas.checklist.length, (index) {
                   final isChecked = tugas.checklistStatus[index];
                   final mataKuliah = _mataKuliahController.getMataKuliahById(tugas.mataKuliahId);
-                  final iconColor = mataKuliah?.warna != null 
+                  final iconColor = mataKuliah?.warna != null
                       ? Color(int.parse(mataKuliah!.warna.replaceAll('#', '0xff')))
                       : const Color(0xFFFFB84D);
-                  
+
                   return InkWell(
                     onTap: () {
                       setDialogState(() {
                         tugas.checklistStatus[index] = !isChecked;
                       });
                       setState(() {
-                        _tugasController.updateChecklistStatus(
-                          tugas.id,
-                          index,
-                          !isChecked,
-                        );
+                        _tugasController.updateChecklistStatus(tugas.id, index, !isChecked);
                       });
                     },
                     child: Padding(
@@ -753,7 +800,9 @@ class _HomePageState extends State<HomePage> {
                             child: Text(
                               tugas.checklist[index],
                               style: TextStyle(
-                                color: isChecked ? Colors.grey[600] : Colors.white,
+                                color: isChecked
+                                    ? (isDarkMode ? Colors.grey[600] : Colors.grey[500])
+                                    : (isDarkMode ? Colors.white : const Color(0xFF1E2936)),
                                 decoration: isChecked ? TextDecoration.lineThrough : null,
                                 fontSize: 15,
                               ),
@@ -772,15 +821,19 @@ class _HomePageState extends State<HomePage> {
                         onPressed: () => Navigator.pop(context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
-                          side: const BorderSide(color: Colors.white),
+                          side: BorderSide(
+                            color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 15),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Cancel',
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
+                          ),
                         ),
                       ),
                     ),
@@ -790,7 +843,9 @@ class _HomePageState extends State<HomePage> {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const TambahTugasPage()),
+                            MaterialPageRoute(
+                              builder: (context) => const TambahTugasPage(),
+                            ),
                           ).then((_) {
                             Navigator.pop(context);
                             setState(() {});
@@ -815,64 +870,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNavBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF2A3947),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(25),
-          topRight: Radius.circular(25),
-        ),
-      ),
-      child: BottomNavigationBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        currentIndex: _selectedIndex,
-        selectedItemColor: const Color(0xFF7AB8FF),
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-          if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const KalenderPage()),
-            );
-          } else if (index == 3) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const DaftarTugasPage()),
-            );
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.today),
-            label: 'Today',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.view_list),
-            label: 'Schedule',
-          ),
-          BottomNavigationBarItem(
-            icon: SizedBox.shrink(),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assignment),
-            label: 'Assignments',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
       ),
     );
   }

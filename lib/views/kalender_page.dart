@@ -1,10 +1,18 @@
+// views/kalender_page.dart
+// ========================================
+// KALENDER PAGE - DENGAN MODERN NAVBAR & THEME
+// ========================================
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../controllers/jadwal_controller.dart';
 import '../controllers/mata_kuliah_controller.dart';
 import '../controllers/tugas_controller.dart';
+import '../controllers/navigation_controller.dart';
 import '../models/jadwal.dart';
 import '../models/mata_kuliah.dart';
+import '../widgets/modern_bottom_navbar.dart';
+import 'tambah_kelas_page.dart';
 
 class KalenderPage extends StatefulWidget {
   const KalenderPage({Key? key}) : super(key: key);
@@ -17,7 +25,7 @@ class _KalenderPageState extends State<KalenderPage> {
   final JadwalController _jadwalController = JadwalController();
   final MataKuliahController _mataKuliahController = MataKuliahController();
   final TugasController _tugasController = TugasController();
-  
+  final NavigationController _navigationController = NavigationController();
   DateTime _focusedWeek = DateTime.now();
   DateTime _selectedDate = DateTime.now();
   final ScrollController _scrollController = ScrollController();
@@ -25,10 +33,10 @@ class _KalenderPageState extends State<KalenderPage> {
   @override
   void initState() {
     super.initState();
-    // Auto scroll to current time
+    _navigationController.setIndex(1); // Schedule page
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final now = TimeOfDay.now();
-      final scrollPosition = (now.hour - 6) * 75.0; // 75 = hour height
+      final scrollPosition = (now.hour - 6) * 75.0;
       if (scrollPosition > 0) {
         _scrollController.animateTo(
           scrollPosition,
@@ -42,6 +50,7 @@ class _KalenderPageState extends State<KalenderPage> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _navigationController.dispose();
     super.dispose();
   }
 
@@ -72,20 +81,23 @@ class _KalenderPageState extends State<KalenderPage> {
   @override
   Widget build(BuildContext context) {
     final weekDays = _getWeekDays();
-    
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+    final textColor = Theme.of(context).colorScheme.onSurface;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF1E2936),
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E2936),
+        backgroundColor: bgColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: textColor),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Jadwal',
           style: TextStyle(
-            color: Colors.white,
+            color: textColor,
             fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
@@ -93,28 +105,36 @@ class _KalenderPageState extends State<KalenderPage> {
       ),
       body: Column(
         children: [
-          _buildWeekHeader(weekDays),
+          _buildWeekHeader(weekDays, isDarkMode, textColor),
           Expanded(
-            child: _buildWeekView(weekDays),
+            child: _buildWeekView(weekDays, isDarkMode),
           ),
         ],
+      ),
+      bottomNavigationBar: ModernBottomNavbar(
+        controller: _navigationController,
+        currentIndex: 1,
+        onAddPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const TambahKelasPage()),
+          ).then((_) => setState(() {}));
+        },
       ),
     );
   }
 
-  Widget _buildWeekHeader(List<DateTime> weekDays) {
+  Widget _buildWeekHeader(List<DateTime> weekDays, bool isDarkMode, Color textColor) {
     final now = DateTime.now();
-    
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
         children: [
-          // Navigation arrows
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
-                icon: const Icon(Icons.chevron_left, color: Colors.white),
+                icon: Icon(Icons.chevron_left_rounded, color: textColor, size: 28),
                 onPressed: () {
                   setState(() {
                     _focusedWeek = _focusedWeek.subtract(const Duration(days: 7));
@@ -130,15 +150,15 @@ class _KalenderPageState extends State<KalenderPage> {
                 },
                 child: Text(
                   '${DateFormat('MMMM yyyy', 'id_ID').format(weekDays.first)}',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: textColor,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.chevron_right, color: Colors.white),
+                icon: Icon(Icons.chevron_right_rounded, color: textColor, size: 28),
                 onPressed: () {
                   setState(() {
                     _focusedWeek = _focusedWeek.add(const Duration(days: 7));
@@ -148,20 +168,16 @@ class _KalenderPageState extends State<KalenderPage> {
             ],
           ),
           const SizedBox(height: 8),
-          // Day headers
           Row(
             children: [
-              // Time column placeholder
               const SizedBox(width: 40),
-              // Days
               ...weekDays.map((date) {
-                final isToday = date.day == now.day && 
-                               date.month == now.month && 
-                               date.year == now.year;
+                final isToday = date.day == now.day &&
+                    date.month == now.month &&
+                    date.year == now.year;
                 final isSelected = date.day == _selectedDate.day &&
-                                  date.month == _selectedDate.month &&
-                                  date.year == _selectedDate.year;
-                
+                    date.month == _selectedDate.month &&
+                    date.year == _selectedDate.year;
                 return Expanded(
                   child: GestureDetector(
                     onTap: () {
@@ -169,13 +185,16 @@ class _KalenderPageState extends State<KalenderPage> {
                         _selectedDate = date;
                       });
                     },
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
                       margin: const EdgeInsets.symmetric(horizontal: 2),
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: isSelected 
+                        color: isSelected
                             ? const Color(0xFF7AB8FF)
-                            : (isToday ? const Color(0xFF2A3947) : Colors.transparent),
+                            : (isToday
+                                ? (isDarkMode ? const Color(0xFF2A3947) : Colors.grey[200])
+                                : Colors.transparent),
                         borderRadius: BorderRadius.circular(10),
                         border: isSelected
                             ? Border.all(color: const Color(0xFF7AB8FF), width: 2)
@@ -186,7 +205,9 @@ class _KalenderPageState extends State<KalenderPage> {
                           Text(
                             date.day.toString(),
                             style: TextStyle(
-                              color: isSelected || isToday ? Colors.white : Colors.grey[400],
+                              color: isSelected || isToday
+                                  ? (isSelected ? Colors.white : textColor)
+                                  : (isDarkMode ? Colors.grey[400] : Colors.grey[600]),
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -195,9 +216,11 @@ class _KalenderPageState extends State<KalenderPage> {
                           Text(
                             _getShortDayName(date.weekday),
                             style: TextStyle(
-                              color: isSelected 
+                              color: isSelected
                                   ? Colors.white
-                                  : (isToday ? Colors.grey[400] : Colors.grey[600]),
+                                  : (isToday
+                                      ? (isDarkMode ? Colors.grey[400] : Colors.grey[600])
+                                      : (isDarkMode ? Colors.grey[600] : Colors.grey[500])),
                               fontSize: 11,
                             ),
                           ),
@@ -214,30 +237,31 @@ class _KalenderPageState extends State<KalenderPage> {
     );
   }
 
-  Widget _buildWeekView(List<DateTime> weekDays) {
+  Widget _buildWeekView(List<DateTime> weekDays, bool isDarkMode) {
     return SingleChildScrollView(
       controller: _scrollController,
+      padding: const EdgeInsets.only(bottom: 120),
       child: Stack(
         children: [
-          // Grid lines and time labels
-          _buildTimeGrid(),
-          // Events
+          _buildTimeGrid(isDarkMode),
           _buildEvents(weekDays),
         ],
       ),
     );
   }
 
-  Widget _buildTimeGrid() {
+  Widget _buildTimeGrid(bool isDarkMode) {
     final hours = List.generate(24, (index) => index);
-    
     return Column(
       children: hours.map((hour) {
         return Container(
           height: 75,
           decoration: BoxDecoration(
             border: Border(
-              top: BorderSide(color: Colors.grey[800]!, width: 0.5),
+              top: BorderSide(
+                color: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
+                width: 0.5,
+              ),
             ),
           ),
           child: Row(
@@ -250,7 +274,7 @@ class _KalenderPageState extends State<KalenderPage> {
                   child: Text(
                     '${hour.toString().padLeft(2, '0')}',
                     style: TextStyle(
-                      color: Colors.grey[600],
+                      color: isDarkMode ? Colors.grey[600] : Colors.grey[500],
                       fontSize: 10,
                       height: 1.2,
                     ),
@@ -266,10 +290,16 @@ class _KalenderPageState extends State<KalenderPage> {
                         margin: const EdgeInsets.symmetric(horizontal: 2),
                         decoration: BoxDecoration(
                           border: Border(
-                            left: index == 0 
-                                ? BorderSide(color: Colors.grey[800]!, width: 0.5)
+                            left: index == 0
+                                ? BorderSide(
+                                    color: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
+                                    width: 0.5,
+                                  )
                                 : BorderSide.none,
-                            right: BorderSide(color: Colors.grey[800]!, width: 0.5),
+                            right: BorderSide(
+                              color: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
+                              width: 0.5,
+                            ),
                           ),
                         ),
                       ),
@@ -286,7 +316,6 @@ class _KalenderPageState extends State<KalenderPage> {
 
   Widget _buildEvents(List<DateTime> weekDays) {
     final allJadwal = _jadwalController.getAllJadwal();
-    
     return Positioned.fill(
       child: Padding(
         padding: const EdgeInsets.only(left: 40),
@@ -294,7 +323,6 @@ class _KalenderPageState extends State<KalenderPage> {
           children: weekDays.map((date) {
             final dayName = _getDayName(date.weekday);
             final jadwalForDay = allJadwal.where((j) => j.hari == dayName).toList();
-            
             return Expanded(
               child: Stack(
                 children: jadwalForDay.map((jadwal) {
@@ -312,22 +340,20 @@ class _KalenderPageState extends State<KalenderPage> {
     final mataKuliah = _mataKuliahController.getMataKuliahById(jadwal.mataKuliahId);
     final startParts = jadwal.jamMulai.split(':');
     final endParts = jadwal.jamSelesai.split(':');
-    
     final startHour = int.parse(startParts[0]);
     final startMinute = int.parse(startParts[1]);
     final endHour = int.parse(endParts[0]);
     final endMinute = int.parse(endParts[1]);
-    
+
     final top = (startHour * 75.0) + (startMinute / 60 * 75.0);
     final duration = ((endHour * 60 + endMinute) - (startHour * 60 + startMinute)) / 60;
     final height = duration * 75.0;
-    
-    // Get color from mata kuliah
-    Color color = const Color(0xFF7AB8FF); // Default
+
+    Color color = const Color(0xFF7AB8FF);
     if (mataKuliah != null && mataKuliah.warna.isNotEmpty) {
       color = _hexToColor(mataKuliah.warna);
     }
-    
+
     return Positioned(
       top: top,
       left: 2,
@@ -338,6 +364,13 @@ class _KalenderPageState extends State<KalenderPage> {
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.3),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

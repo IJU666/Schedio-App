@@ -1,13 +1,16 @@
+// views/daftar_tugas_page.dart
+// ========================================
+// DAFTAR TUGAS PAGE - DENGAN MODERN NAVBAR & THEME
+// ========================================
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../controllers/tugas_controller.dart';
 import '../controllers/mata_kuliah_controller.dart';
+import '../controllers/navigation_controller.dart';
 import '../models/tugas.dart';
-import '../models/mata_kuliah.dart';
-import 'tambah_tugas_page.dart';
+import '../widgets/modern_bottom_navbar.dart';
 import 'tambah_kelas_page.dart';
-import 'home_page.dart';
-import 'kalender_page.dart';
 
 class DaftarTugasPage extends StatefulWidget {
   const DaftarTugasPage({Key? key}) : super(key: key);
@@ -16,16 +19,18 @@ class DaftarTugasPage extends StatefulWidget {
   State<DaftarTugasPage> createState() => _DaftarTugasPageState();
 }
 
-class _DaftarTugasPageState extends State<DaftarTugasPage> with SingleTickerProviderStateMixin {
+class _DaftarTugasPageState extends State<DaftarTugasPage>
+    with SingleTickerProviderStateMixin {
   final TugasController _tugasController = TugasController();
   final MataKuliahController _mataKuliahController = MataKuliahController();
-  
+  final NavigationController _navigationController = NavigationController();
   TabController? _tabController;
   int _selectedTab = 0;
 
   @override
   void initState() {
     super.initState();
+    _navigationController.setIndex(3); // Assignments page
     _tabController = TabController(length: 3, vsync: this);
     _tabController!.addListener(() {
       setState(() {
@@ -37,6 +42,7 @@ class _DaftarTugasPageState extends State<DaftarTugasPage> with SingleTickerProv
   @override
   void dispose() {
     _tabController?.dispose();
+    _navigationController.dispose();
     super.dispose();
   }
 
@@ -51,31 +57,28 @@ class _DaftarTugasPageState extends State<DaftarTugasPage> with SingleTickerProv
   Map<String, List<Tugas>> _groupTugasByDate(List<Tugas> tugasList) {
     final Map<String, List<Tugas>> grouped = {};
     final now = DateTime.now();
-    
     for (var tugas in tugasList) {
       final date = tugas.tanggal;
       String label;
-      
       if (date.year == now.year && date.month == now.month && date.day == now.day) {
         label = 'Hari ini - ${DateFormat('d MMMM yyyy', 'id_ID').format(date)}';
-      } else if (date.year == now.year && date.month == now.month && date.day == now.day + 1) {
+      } else if (date.year == now.year &&
+          date.month == now.month &&
+          date.day == now.day + 1) {
         label = 'Besok - ${DateFormat('d MMMM yyyy', 'id_ID').format(date)}';
       } else {
         label = DateFormat('EEEE - d MMMM yyyy', 'id_ID').format(date);
       }
-      
       if (!grouped.containsKey(label)) {
         grouped[label] = [];
       }
       grouped[label]!.add(tugas);
     }
-    
     return grouped;
   }
 
   List<Tugas> _getFilteredTugas() {
     final allTugas = _tugasController.getAllTugas();
-    
     switch (_selectedTab) {
       case 0: // Tenggat
         allTugas.sort((a, b) => a.tanggal.compareTo(b.tanggal));
@@ -92,25 +95,30 @@ class _DaftarTugasPageState extends State<DaftarTugasPage> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+    final textColor = Theme.of(context).colorScheme.onSurface;
+    final cardColor = Theme.of(context).cardColor;
+
     if (_tabController == null) {
-      return const Scaffold(
-        backgroundColor: Color(0xFF1E2936),
-        body: Center(
+      return Scaffold(
+        backgroundColor: bgColor,
+        body: const Center(
           child: CircularProgressIndicator(),
         ),
       );
     }
-    
+
     return Scaffold(
-      backgroundColor: const Color(0xFF1E2936),
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E2936),
+        backgroundColor: bgColor,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: const Text(
+        title: Text(
           'Tugas',
           style: TextStyle(
-            color: Colors.white,
+            color: textColor,
             fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
@@ -118,101 +126,41 @@ class _DaftarTugasPageState extends State<DaftarTugasPage> with SingleTickerProv
       ),
       body: Column(
         children: [
-          _buildTabBar(),
+          _buildTabBar(isDarkMode, cardColor),
           Expanded(
-            child: _buildTugasList(),
+            child: _buildTugasList(isDarkMode, cardColor, textColor),
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
-      floatingActionButton: Container(
-        width: 65,
-        height: 65,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: const Color(0xFF7AB8FF),
-        ),
-        child: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const TambahKelasPage()),
-            ).then((_) => setState(() {}));
-          },
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          child: const Icon(Icons.add, color: Colors.white, size: 32),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-    );
-  }
-
-  Widget _buildBottomNavBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF2A3947),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(25),
-          topRight: Radius.circular(25),
-        ),
-      ),
-      child: BottomNavigationBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      bottomNavigationBar: ModernBottomNavbar(
+        controller: _navigationController,
         currentIndex: 3,
-        selectedItemColor: const Color(0xFF7AB8FF),
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const HomePage()),
-            );
-          } else if (index == 1) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const KalenderPage()),
-            );
-          }
+        onAddPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const TambahKelasPage()),
+          ).then((_) => setState(() {}));
         },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.today),
-            label: 'Today',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.view_list),
-            label: 'Schedule',
-          ),
-          BottomNavigationBarItem(
-            icon: SizedBox.shrink(),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assignment),
-            label: 'Assignments',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
       ),
     );
   }
 
-  Widget _buildTabBar() {
+  Widget _buildTabBar(bool isDarkMode, Color cardColor) {
     if (_tabController == null) {
       return const SizedBox.shrink();
     }
-    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF2A3947),
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: TabBar(
         controller: _tabController,
@@ -222,7 +170,7 @@ class _DaftarTugasPageState extends State<DaftarTugasPage> with SingleTickerProv
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: Colors.white,
-        unselectedLabelColor: Colors.grey[400],
+        unselectedLabelColor: isDarkMode ? Colors.grey[400] : Colors.grey[600],
         labelStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
@@ -236,9 +184,8 @@ class _DaftarTugasPageState extends State<DaftarTugasPage> with SingleTickerProv
     );
   }
 
-  Widget _buildTugasList() {
+  Widget _buildTugasList(bool isDarkMode, Color cardColor, Color textColor) {
     final tugasList = _getFilteredTugas();
-    
     if (tugasList.isEmpty) {
       return Center(
         child: Column(
@@ -247,13 +194,13 @@ class _DaftarTugasPageState extends State<DaftarTugasPage> with SingleTickerProv
             Icon(
               Icons.assignment_outlined,
               size: 64,
-              color: Colors.grey[700],
+              color: isDarkMode ? Colors.grey[700] : Colors.grey[400],
             ),
             const SizedBox(height: 16),
             Text(
               'Belum ada tugas',
               style: TextStyle(
-                color: Colors.grey[600],
+                color: isDarkMode ? Colors.grey[600] : Colors.grey[500],
                 fontSize: 16,
               ),
             ),
@@ -266,12 +213,11 @@ class _DaftarTugasPageState extends State<DaftarTugasPage> with SingleTickerProv
       // Group by date for Tenggat tab
       final grouped = _groupTugasByDate(tugasList);
       return ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
         itemCount: grouped.length,
         itemBuilder: (context, index) {
           final dateLabel = grouped.keys.elementAt(index);
           final tugasGroup = grouped[dateLabel]!;
-          
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -279,14 +225,14 @@ class _DaftarTugasPageState extends State<DaftarTugasPage> with SingleTickerProv
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Text(
                   dateLabel,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: textColor,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              ...tugasGroup.map((tugas) => _buildTugasCard(tugas)),
+              ...tugasGroup.map((tugas) => _buildTugasCard(tugas, isDarkMode, cardColor, textColor)),
               const SizedBox(height: 16),
             ],
           );
@@ -295,29 +241,36 @@ class _DaftarTugasPageState extends State<DaftarTugasPage> with SingleTickerProv
     } else {
       // Simple list for other tabs
       return ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
         itemCount: tugasList.length,
         itemBuilder: (context, index) {
-          return _buildTugasCard(tugasList[index]);
+          return _buildTugasCard(tugasList[index], isDarkMode, cardColor, textColor);
         },
       );
     }
   }
 
-  Widget _buildTugasCard(Tugas tugas) {
+  Widget _buildTugasCard(Tugas tugas, bool isDarkMode, Color cardColor, Color textColor) {
     final mataKuliah = _mataKuliahController.getMataKuliahById(tugas.mataKuliahId);
     Color borderColor = const Color(0xFF7AB8FF);
-    
     if (mataKuliah != null && mataKuliah.warna.isNotEmpty) {
       borderColor = _hexToColor(mataKuliah.warna);
     }
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E2936),
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: borderColor.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -341,8 +294,7 @@ class _DaftarTugasPageState extends State<DaftarTugasPage> with SingleTickerProv
               ],
             ),
           ),
-          
-          // Main Task Title (judul tugas)
+          // Main Task Title
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
@@ -350,7 +302,6 @@ class _DaftarTugasPageState extends State<DaftarTugasPage> with SingleTickerProv
                 GestureDetector(
                   onTap: () {
                     setState(() {
-                      // Toggle all checklist items
                       final allChecked = tugas.checklistStatus.every((status) => status);
                       for (int i = 0; i < tugas.checklistStatus.length; i++) {
                         _tugasController.updateChecklistStatus(
@@ -371,7 +322,7 @@ class _DaftarTugasPageState extends State<DaftarTugasPage> with SingleTickerProv
                       border: Border.all(
                         color: tugas.checklistStatus.every((s) => s)
                             ? const Color(0xFFFFB84D)
-                            : Colors.grey[600]!,
+                            : (isDarkMode ? Colors.grey[600]! : Colors.grey[400]!),
                         width: 2,
                       ),
                       borderRadius: BorderRadius.circular(4),
@@ -390,8 +341,8 @@ class _DaftarTugasPageState extends State<DaftarTugasPage> with SingleTickerProv
                         tugas.judul,
                         style: TextStyle(
                           color: tugas.checklistStatus.every((s) => s)
-                              ? Colors.grey[600]
-                              : Colors.white,
+                              ? (isDarkMode ? Colors.grey[600] : Colors.grey[500])
+                              : textColor,
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                           decoration: tugas.checklistStatus.every((s) => s)
@@ -403,7 +354,7 @@ class _DaftarTugasPageState extends State<DaftarTugasPage> with SingleTickerProv
                       Text(
                         'Note from checklist',
                         style: TextStyle(
-                          color: Colors.grey[600],
+                          color: isDarkMode ? Colors.grey[600] : Colors.grey[500],
                           fontSize: 12,
                         ),
                       ),
@@ -413,7 +364,6 @@ class _DaftarTugasPageState extends State<DaftarTugasPage> with SingleTickerProv
               ],
             ),
           ),
-          
           const SizedBox(height: 12),
         ],
       ),

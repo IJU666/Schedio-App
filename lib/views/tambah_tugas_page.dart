@@ -1,4 +1,7 @@
-// tambah_tugas_page.dart
+// views/tambah_tugas_page.dart
+// ========================================
+// TAMBAH TUGAS PAGE - DENGAN THEME SUPPORT
+// ========================================
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -17,10 +20,8 @@ class TambahTugasPage extends StatefulWidget {
 class _TambahTugasPageState extends State<TambahTugasPage> {
   final TugasController _tugasController = TugasController();
   final MataKuliahController _mataKuliahController = MataKuliahController();
-  
   final TextEditingController _judulController = TextEditingController();
   final TextEditingController _keteranganController = TextEditingController();
-  
   MataKuliah? _selectedMataKuliah;
   bool _isPrioritas = false;
   bool _setiapHari = false;
@@ -36,6 +37,8 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
@@ -44,13 +47,13 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF7AB8FF),
+            colorScheme: ColorScheme.dark(
+              primary: const Color(0xFF7AB8FF),
               onPrimary: Colors.white,
-              surface: Color(0xFF2A3947),
-              onSurface: Colors.white,
+              surface: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
+              onSurface: isDarkMode ? Colors.white : const Color(0xFF1E2936),
             ),
-            dialogBackgroundColor: const Color(0xFF2A3947),
+            dialogBackgroundColor: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
           ),
           child: child!,
         );
@@ -66,20 +69,24 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
   @override
   Widget build(BuildContext context) {
     final allMataKuliah = _mataKuliahController.getAllMataKuliah();
-    
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).colorScheme.onSurface;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF1E2936),
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E2936),
+        backgroundColor: bgColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: textColor),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Tugas Baru',
           style: TextStyle(
-            color: Colors.white,
+            color: textColor,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -90,22 +97,22 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Tugas',
               style: TextStyle(
-                color: Colors.grey,
+                color: isDarkMode ? Colors.grey : Colors.grey[700],
                 fontSize: 14,
               ),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: _judulController,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: textColor),
               decoration: InputDecoration(
                 hintText: 'Tubes PPB',
-                hintStyle: TextStyle(color: Colors.grey[600]),
+                hintStyle: TextStyle(color: isDarkMode ? Colors.grey[600] : Colors.grey[500]),
                 filled: true,
-                fillColor: const Color(0xFF2A3947),
+                fillColor: cardColor,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
@@ -117,22 +124,22 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
               ),
             ),
             const SizedBox(height: 25),
-            const Text(
+            Text(
               'Mata Kuliah',
               style: TextStyle(
-                color: Colors.grey,
+                color: isDarkMode ? Colors.grey : Colors.grey[700],
                 fontSize: 14,
               ),
             ),
             const SizedBox(height: 10),
             Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF2A3947),
+                color: cardColor,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: DropdownButtonFormField<MataKuliah>(
                 value: _selectedMataKuliah,
-                dropdownColor: const Color(0xFF2A3947),
+                dropdownColor: cardColor,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -143,17 +150,17 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
                     vertical: 15,
                   ),
                 ),
-                hint: const Text(
+                hint: Text(
                   'PPB 666 - Pemograman Perangkat Bergerak',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: textColor),
                 ),
-                icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                icon: Icon(Icons.arrow_drop_down, color: textColor),
                 items: allMataKuliah.map((mk) {
                   return DropdownMenuItem<MataKuliah>(
                     value: mk,
                     child: Text(
                       '${mk.kode} - ${mk.nama}',
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: textColor),
                     ),
                   );
                 }).toList(),
@@ -165,10 +172,10 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
               ),
             ),
             const SizedBox(height: 25),
-            const Text(
+            Text(
               'Keterangan',
               style: TextStyle(
-                color: Colors.grey,
+                color: isDarkMode ? Colors.grey : Colors.grey[700],
                 fontSize: 14,
               ),
             ),
@@ -176,12 +183,12 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
             TextField(
               controller: _keteranganController,
               maxLines: 4,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: textColor),
               decoration: InputDecoration(
                 hintText: 'Eg. Read from page 100 to 150',
-                hintStyle: TextStyle(color: Colors.grey[600]),
+                hintStyle: TextStyle(color: isDarkMode ? Colors.grey[600] : Colors.grey[500]),
                 filled: true,
-                fillColor: const Color(0xFF2A3947),
+                fillColor: cardColor,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
@@ -200,22 +207,22 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
                     });
                   },
                   activeColor: const Color(0xFF7AB8FF),
-                  side: const BorderSide(color: Colors.grey),
+                  side: BorderSide(color: isDarkMode ? Colors.grey : Colors.grey[600]!),
                 ),
-                const Text(
+                Text(
                   'Jadikan Prioritas',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: textColor,
                     fontSize: 16,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 25),
-            const Text(
+            Text(
               'Setiap Hari',
               style: TextStyle(
-                color: Colors.white,
+                color: textColor,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
@@ -226,7 +233,7 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2A3947),
+                  color: cardColor,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
@@ -247,18 +254,18 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
                         });
                       },
                       activeThumbColor: const Color(0xFF4ECCA3),
-                      inactiveThumbColor: Colors.grey,
-                      inactiveTrackColor: Colors.grey[800],
+                      inactiveThumbColor: isDarkMode ? Colors.grey : Colors.grey[400],
+                      inactiveTrackColor: isDarkMode ? Colors.grey[800] : Colors.grey[300],
                     ),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 25),
-            const Text(
+            Text(
               'Tenggat',
               style: TextStyle(
-                color: Colors.white,
+                color: textColor,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
@@ -282,8 +289,8 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
                     });
                   },
                   activeThumbColor: const Color(0xFF4ECCA3),
-                  inactiveThumbColor: Colors.grey,
-                  inactiveTrackColor: Colors.grey[800],
+                  inactiveThumbColor: isDarkMode ? Colors.grey : Colors.grey[400],
+                  inactiveTrackColor: isDarkMode ? Colors.grey[800] : Colors.grey[300],
                 ),
               ],
             ),
@@ -372,7 +379,6 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
         backgroundColor: Color(0xFF4ECCA3),
       ),
     );
-
     Navigator.pop(context);
   }
 }

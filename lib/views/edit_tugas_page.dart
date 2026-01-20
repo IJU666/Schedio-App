@@ -1,3 +1,8 @@
+// views/edit_tugas_page.dart
+// ========================================
+// EDIT TUGAS PAGE - DENGAN THEME SUPPORT
+// ========================================
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../controllers/tugas_controller.dart';
@@ -7,7 +12,6 @@ import '../models/mata_kuliah.dart';
 
 class EditTugasPage extends StatefulWidget {
   final Tugas tugas;
-  
   const EditTugasPage({super.key, required this.tugas});
 
   @override
@@ -17,10 +21,9 @@ class EditTugasPage extends StatefulWidget {
 class _EditTugasPageState extends State<EditTugasPage> {
   final TugasController _tugasController = TugasController();
   final MataKuliahController _mataKuliahController = MataKuliahController();
-  
+
   late TextEditingController _judulController;
   late TextEditingController _keteranganController;
-  
   late MataKuliah? _selectedMataKuliah;
   late bool _isPrioritas;
   late bool _setiapHari;
@@ -49,20 +52,24 @@ class _EditTugasPageState extends State<EditTugasPage> {
   @override
   Widget build(BuildContext context) {
     final allMataKuliah = _mataKuliahController.getAllMataKuliah();
-    
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).colorScheme.onSurface;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF1E2936),
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E2936),
+        backgroundColor: bgColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: textColor),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Edit Tugas',
           style: TextStyle(
-            color: Colors.white,
+            color: textColor,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -79,20 +86,20 @@ class _EditTugasPageState extends State<EditTugasPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Tugas',
               style: TextStyle(
-                color: Colors.grey,
+                color: isDarkMode ? Colors.grey : Colors.grey[700],
                 fontSize: 14,
               ),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: _judulController,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: textColor),
               decoration: InputDecoration(
                 filled: true,
-                fillColor: const Color(0xFF2A3947),
+                fillColor: cardColor,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
@@ -104,22 +111,22 @@ class _EditTugasPageState extends State<EditTugasPage> {
               ),
             ),
             const SizedBox(height: 25),
-            const Text(
+            Text(
               'Mata Kuliah',
               style: TextStyle(
-                color: Colors.grey,
+                color: isDarkMode ? Colors.grey : Colors.grey[700],
                 fontSize: 14,
               ),
             ),
             const SizedBox(height: 10),
             Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF2A3947),
+                color: cardColor,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: DropdownButtonFormField<MataKuliah>(
-                initialValue: _selectedMataKuliah,
-                dropdownColor: const Color(0xFF2A3947),
+                value: _selectedMataKuliah,
+                dropdownColor: cardColor,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -130,13 +137,13 @@ class _EditTugasPageState extends State<EditTugasPage> {
                     vertical: 15,
                   ),
                 ),
-                icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                icon: Icon(Icons.arrow_drop_down, color: textColor),
                 items: allMataKuliah.map((mk) {
                   return DropdownMenuItem<MataKuliah>(
                     value: mk,
                     child: Text(
                       '${mk.kode} - ${mk.nama}',
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: textColor),
                     ),
                   );
                 }).toList(),
@@ -148,10 +155,10 @@ class _EditTugasPageState extends State<EditTugasPage> {
               ),
             ),
             const SizedBox(height: 25),
-            const Text(
+            Text(
               'Keterangan',
               style: TextStyle(
-                color: Colors.grey,
+                color: isDarkMode ? Colors.grey : Colors.grey[700],
                 fontSize: 14,
               ),
             ),
@@ -159,10 +166,10 @@ class _EditTugasPageState extends State<EditTugasPage> {
             TextField(
               controller: _keteranganController,
               maxLines: 4,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: textColor),
               decoration: InputDecoration(
                 filled: true,
-                fillColor: const Color(0xFF2A3947),
+                fillColor: cardColor,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
@@ -181,22 +188,22 @@ class _EditTugasPageState extends State<EditTugasPage> {
                     });
                   },
                   activeColor: const Color(0xFF7AB8FF),
-                  side: const BorderSide(color: Colors.grey),
+                  side: BorderSide(color: isDarkMode ? Colors.grey : Colors.grey[600]!),
                 ),
-                const Text(
+                Text(
                   'Jadikan Prioritas',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: textColor,
                     fontSize: 16,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 25),
-            const Text(
+            Text(
               'Setiap Hari',
               style: TextStyle(
-                color: Colors.white,
+                color: textColor,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
@@ -220,8 +227,8 @@ class _EditTugasPageState extends State<EditTugasPage> {
                     });
                   },
                   activeThumbColor: const Color(0xFF4ECCA3),
-                  inactiveThumbColor: Colors.grey,
-                  inactiveTrackColor: Colors.grey[800],
+                  inactiveThumbColor: isDarkMode ? Colors.grey : Colors.grey[400],
+                  inactiveTrackColor: isDarkMode ? Colors.grey[800] : Colors.grey[300],
                 ),
               ],
             ),
@@ -305,22 +312,27 @@ class _EditTugasPageState extends State<EditTugasPage> {
         backgroundColor: Color(0xFF4ECCA3),
       ),
     );
-
     Navigator.pop(context);
   }
 
   void _deleteTugas() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF2A3947),
-        title: const Text(
+        backgroundColor: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
+        title: Text(
           'Hapus Tugas',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
+          ),
         ),
-        content: const Text(
+        content: Text(
           'Apakah Anda yakin ingin menghapus tugas ini?',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
+          ),
         ),
         actions: [
           TextButton(
