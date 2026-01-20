@@ -49,22 +49,32 @@ class _ModernBottomNavbarState extends State<ModernBottomNavbar>
 
   @override
   Widget build(BuildContext context) {
+    // ⭐ Deteksi theme mode dari context
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return SizedBox(
       height: 70,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Background with gradient
+          // Background with gradient - ⭐ RESPONSIVE TO THEME
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    const Color(0xFF2A3947).withOpacity(0.95),
-                    const Color(0xFF1E2936),
-                  ],
+                  colors: isDarkMode
+                      ? [
+                          // Dark mode: gradient gelap
+                          const Color(0xFF2A3947).withOpacity(0.95),
+                          const Color(0xFF1E2936),
+                        ]
+                      : [
+                          // Light mode: gradient terang
+                          Colors.white.withOpacity(0.98),
+                          const Color(0xFFF8F9FA),
+                        ],
                 ),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(30),
@@ -72,7 +82,9 @@ class _ModernBottomNavbarState extends State<ModernBottomNavbar>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: isDarkMode
+                        ? Colors.black.withOpacity(0.3)
+                        : Colors.grey.withOpacity(0.15),
                     blurRadius: 20,
                     offset: const Offset(0, -5),
                   ),
@@ -95,7 +107,7 @@ class _ModernBottomNavbarState extends State<ModernBottomNavbar>
                     if (item.isCenter) {
                       return const SizedBox(width: 60);
                     }
-                    return _buildNavItem(item, index);
+                    return _buildNavItem(item, index, isDarkMode);
                   },
                 ),
               ),
@@ -161,7 +173,8 @@ class _ModernBottomNavbarState extends State<ModernBottomNavbar>
     );
   }
 
-  Widget _buildNavItem(NavigationItem item, int index) {
+  // ⭐ Tambahkan parameter isDarkMode
+  Widget _buildNavItem(NavigationItem item, int index, bool isDarkMode) {
     final isSelected = widget.currentIndex == index;
     
     return Flexible(
@@ -173,7 +186,7 @@ class _ModernBottomNavbarState extends State<ModernBottomNavbar>
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
-                print('Navigating to index: $index'); // Debug
+                print('Navigating to index: $index');
                 widget.controller.navigateToIndex(context, index);
               },
               splashColor: const Color(0xFF7AB8FF).withOpacity(0.3),
@@ -201,7 +214,7 @@ class _ModernBottomNavbarState extends State<ModernBottomNavbar>
                     ),
                     const SizedBox(height: 4),
                     
-                    // Icon with animation
+                    // Icon with animation - ⭐ RESPONSIVE TO THEME
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       padding: EdgeInsets.all(isSelected ? 4 : 0),
@@ -215,20 +228,20 @@ class _ModernBottomNavbarState extends State<ModernBottomNavbar>
                         item.icon,
                         color: isSelected 
                           ? const Color(0xFF7AB8FF)
-                          : Colors.grey[400],
+                          : (isDarkMode ? Colors.grey[400] : Colors.grey[600]),
                         size: isSelected ? 26 : 24,
                       ),
                     ),
                     
                     const SizedBox(height: 4),
                     
-                    // Label with fade
+                    // Label with fade - ⭐ RESPONSIVE TO THEME
                     Text(
                       item.label,
                       style: TextStyle(
                         color: isSelected 
                           ? const Color(0xFF7AB8FF)
-                          : Colors.grey[500],
+                          : (isDarkMode ? Colors.grey[500] : Colors.grey[600]),
                         fontSize: isSelected ? 11 : 10,
                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                       ),

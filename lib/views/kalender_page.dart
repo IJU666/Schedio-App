@@ -10,7 +10,6 @@ import '../controllers/mata_kuliah_controller.dart';
 import '../controllers/tugas_controller.dart';
 import '../controllers/navigation_controller.dart';
 import '../models/jadwal.dart';
-import '../models/mata_kuliah.dart';
 import '../widgets/modern_bottom_navbar.dart';
 import 'tambah_kelas_page.dart';
 
