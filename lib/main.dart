@@ -1,6 +1,6 @@
 // main.dart
 // ========================================
-// MAIN - DENGAN THEME PROVIDER
+// MAIN - DENGAN THEME PROVIDER & SMOOTH TRANSITIONS
 // ========================================
 
 import 'package:flutter/material.dart';
@@ -13,6 +13,7 @@ import 'package:schedule_app/views/kalender_page.dart';
 import 'package:schedule_app/views/pengaturan_page.dart';
 import 'package:schedule_app/views/tambah_kelas_page.dart';
 import 'package:schedule_app/views/tambah_tugas_page.dart';
+import 'package:schedule_app/utils/page_transition.dart'; // Import PageTransition
 import 'models/mata_kuliah.dart';
 import 'models/tugas.dart';
 import 'models/jadwal.dart';
@@ -25,20 +26,19 @@ void main() async {
   // Initialize Indonesian locale
   await initializeDateFormatting('id_ID', null);
   
-// Initialize Hive
-await Hive.initFlutter();
+  // Initialize Hive
+  await Hive.initFlutter();
 
-// Register Adapters
-Hive.registerAdapter(MataKuliahAdapter());
-Hive.registerAdapter(TugasAdapter());
-Hive.registerAdapter(JadwalAdapter());
+  // Register Adapters
+  Hive.registerAdapter(MataKuliahAdapter());
+  Hive.registerAdapter(TugasAdapter());
+  Hive.registerAdapter(JadwalAdapter());
 
-// Open Boxes
+  // Open Boxes
   await Hive.openBox<MataKuliah>('mataKuliahBox');
   await Hive.openBox<Tugas>('tugasBox');
   await Hive.openBox<Jadwal>('jadwalBox');
 
-  
   runApp(
     // Provider untuk Theme Management
     ChangeNotifierProvider(
@@ -70,13 +70,48 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           home: const SplashScreen(),
 
-          routes: {
-            '/home': (context) => const HomePage(),
-            '/daftarTugas': (context) => const DaftarTugasPage(),
-            '/kalender': (context) => const KalenderPage(),
-            '/pengaturan': (context) => const PengaturanPage(),
-            '/tambahKelas': (context) => const TambahKelasPage(),
-            '/tambahTugas': (context) => const TambahTugasPage()
+          // Gunakan onGenerateRoute untuk custom smooth transitions
+          onGenerateRoute: (settings) {
+            switch (settings.name) {
+              case '/home':
+                return PageTransition.createRoute(
+                  const HomePage(),
+                  type: TransitionType.fade,
+                );
+              
+              case '/daftarTugas':
+                return PageTransition.createRoute(
+                  const DaftarTugasPage(),
+                  type: TransitionType.fade,
+                );
+              
+              case '/kalender':
+                return PageTransition.createRoute(
+                  const KalenderPage(),
+                  type: TransitionType.fade,
+                );
+              
+              case '/pengaturan':
+                return PageTransition.createRoute(
+                  const PengaturanPage(),
+                  type: TransitionType.fade,
+                );
+              
+              case '/tambahKelas':
+                return PageTransition.createRoute(
+                  const TambahKelasPage(),
+                  type: TransitionType.fade,
+                );
+              
+              case '/tambahTugas':
+                return PageTransition.createRoute(
+                  const TambahTugasPage(),
+                  type: TransitionType.fade,
+                );
+              
+              default:
+                return null;
+            }
           },
         );
       },
