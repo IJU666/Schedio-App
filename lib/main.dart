@@ -25,15 +25,15 @@ void main() async {
   // Initialize Indonesian locale
   await initializeDateFormatting('id_ID', null);
   
-  // Initialize Hive
-  await Hive.initFlutter();
-  
-  // Register Adapters
-  Hive.registerAdapter(MataKuliahAdapter());
-  Hive.registerAdapter(TugasAdapter());
-  Hive.registerAdapter(JadwalAdapter());
-  
-  // Open Boxes
+// Initialize Hive
+await Hive.initFlutter();
+
+// Register Adapters
+Hive.registerAdapter(MataKuliahAdapter());
+Hive.registerAdapter(TugasAdapter());
+Hive.registerAdapter(JadwalAdapter());
+
+// Open Boxes
   await Hive.openBox<MataKuliah>('mataKuliahBox');
   await Hive.openBox<Tugas>('tugasBox');
   await Hive.openBox<Jadwal>('jadwalBox');
