@@ -13,6 +13,7 @@ import '../models/jadwal.dart';
 import '../models/mata_kuliah.dart';
 import '../widgets/modern_bottom_navbar.dart';
 import 'tambah_kelas_page.dart';
+import 'dart:math';
 
 class KalenderPage extends StatefulWidget {
   const KalenderPage({Key? key}) : super(key: key);
@@ -86,20 +87,22 @@ class _KalenderPageState extends State<KalenderPage> {
     final textColor = Theme.of(context).colorScheme.onSurface;
 
     return Scaffold(
+      
       backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: bgColor,
+         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: textColor),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Jadwal',
-          style: TextStyle(
-            color: textColor,
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
+        automaticallyImplyLeading: false,
+        title: Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: Text(
+            'Jadwal',
+            style: TextStyle(
+              color: textColor,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ),
@@ -337,67 +340,121 @@ class _KalenderPageState extends State<KalenderPage> {
   }
 
   Widget _buildEventCard(Jadwal jadwal) {
-    final mataKuliah = _mataKuliahController.getMataKuliahById(jadwal.mataKuliahId);
-    final startParts = jadwal.jamMulai.split(':');
-    final endParts = jadwal.jamSelesai.split(':');
-    final startHour = int.parse(startParts[0]);
-    final startMinute = int.parse(startParts[1]);
-    final endHour = int.parse(endParts[0]);
-    final endMinute = int.parse(endParts[1]);
+  final mataKuliah = _mataKuliahController.getMataKuliahById(jadwal.mataKuliahId);
+  final startParts = jadwal.jamMulai.split(':');
+  final endParts = jadwal.jamSelesai.split(':');
+  final startHour = int.parse(startParts[0]);
+  final startMinute = int.parse(startParts[1]);
+  final endHour = int.parse(endParts[0]);
+  final endMinute = int.parse(endParts[1]);
 
-    final top = (startHour * 75.0) + (startMinute / 60 * 75.0);
-    final duration = ((endHour * 60 + endMinute) - (startHour * 60 + startMinute)) / 60;
-    final height = duration * 75.0;
+  final top = (startHour * 75.0) + (startMinute / 60 * 75.0);
+  final duration = ((endHour * 60 + endMinute) - (startHour * 60 + startMinute)) / 60;
+  final height = duration * 75.0;
+  final minHeight = 40.0;
+  final finalHeight = max(height, minHeight);
 
-    Color color = const Color(0xFF7AB8FF);
-    if (mataKuliah != null && mataKuliah.warna.isNotEmpty) {
-      color = _hexToColor(mataKuliah.warna);
-    }
+  Color color = const Color(0xFF7AB8FF);
+  if (mataKuliah != null && mataKuliah.warna.isNotEmpty) {
+    color = _hexToColor(mataKuliah.warna);
+  }
 
-    return Positioned(
-      top: top,
-      left: 2,
-      right: 2,
-      height: height - 2,
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: color,
+  // Dynamic font sizes berdasarkan tinggi
+  final titleFontSize = finalHeight < 60 ? 10.0 : 13.0;
+  final detailFontSize = finalHeight < 60 ? 9.0 : 11.0;
+  final iconSize = finalHeight < 60 ? 10.0 : 12.0;
+  final padding = finalHeight < 60 ? 4.0 : 8.0;
+
+  return Positioned(
+    top: top,
+    left: 0,
+    right: 0,
+    height: finalHeight,
+    child: Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.85),
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.3),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              mataKuliah?.nama ?? 'Mata Kuliah',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
+          onTap: () {
+            // Handle tap
+          },
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: Padding(
+                padding: EdgeInsets.all(padding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      mataKuliah?.nama ?? 'Mata Kuliah',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: titleFontSize,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: finalHeight < 60 ? 1 : 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (finalHeight >= 50) SizedBox(height: finalHeight < 60 ? 2 : 4),
+                    Row(
+                      children: [
+                        Icon(Icons.access_time, color: Colors.white70, size: iconSize),
+                        SizedBox(width: finalHeight < 60 ? 2 : 4),
+                        Flexible(
+                          child: Text(
+                            '${jadwal.jamMulai.substring(0, 5)} - ${jadwal.jamSelesai.substring(0, 5)}',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: detailFontSize,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (jadwal.ruangan.isNotEmpty && finalHeight >= 70) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.location_on, color: Colors.white70, size: iconSize),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              jadwal.ruangan,
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: detailFontSize,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 2),
-            Text(
-              jadwal.ruangan,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+          ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
