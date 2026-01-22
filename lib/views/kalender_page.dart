@@ -12,6 +12,7 @@ import '../controllers/navigation_controller.dart';
 import '../models/jadwal.dart';
 import '../widgets/modern_bottom_navbar.dart';
 import 'tambah_kelas_page.dart';
+import 'dart:math';
 
 class KalenderPage extends StatefulWidget {
   const KalenderPage({Key? key}) : super(key: key);
@@ -60,7 +61,15 @@ class _KalenderPageState extends State<KalenderPage> {
   }
 
   String _getDayName(int weekday) {
-    const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    const days = [
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu',
+      'Minggu'
+    ];
     return days[weekday - 1];
   }
 
@@ -88,17 +97,18 @@ class _KalenderPageState extends State<KalenderPage> {
       backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: bgColor,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: textColor),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Jadwal',
-          style: TextStyle(
-            color: textColor,
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
+        automaticallyImplyLeading: false,
+        title: Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: Text(
+            'Jadwal',
+            style: TextStyle(
+              color: textColor,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ),
@@ -123,7 +133,8 @@ class _KalenderPageState extends State<KalenderPage> {
     );
   }
 
-  Widget _buildWeekHeader(List<DateTime> weekDays, bool isDarkMode, Color textColor) {
+  Widget _buildWeekHeader(
+      List<DateTime> weekDays, bool isDarkMode, Color textColor) {
     final now = DateTime.now();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -133,20 +144,17 @@ class _KalenderPageState extends State<KalenderPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
-                icon: Icon(Icons.chevron_left_rounded, color: textColor, size: 28),
+                icon: Icon(Icons.chevron_left_rounded,
+                    color: textColor, size: 28),
                 onPressed: () {
                   setState(() {
-                    _focusedWeek = _focusedWeek.subtract(const Duration(days: 7));
+                    _focusedWeek =
+                        _focusedWeek.subtract(const Duration(days: 7));
                   });
                 },
               ),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _focusedWeek = DateTime.now();
-                    _selectedDate = DateTime.now();
-                  });
-                },
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
                 child: Text(
                   '${DateFormat('MMMM yyyy', 'id_ID').format(weekDays.first)}',
                   style: TextStyle(
@@ -157,7 +165,8 @@ class _KalenderPageState extends State<KalenderPage> {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.chevron_right_rounded, color: textColor, size: 28),
+                icon: Icon(Icons.chevron_right_rounded,
+                    color: textColor, size: 28),
                 onPressed: () {
                   setState(() {
                     _focusedWeek = _focusedWeek.add(const Duration(days: 7));
@@ -169,14 +178,12 @@ class _KalenderPageState extends State<KalenderPage> {
           const SizedBox(height: 8),
           Row(
             children: [
-              const SizedBox(width: 40),
+              const SizedBox(width: 10),
               ...weekDays.map((date) {
                 final isToday = date.day == now.day &&
                     date.month == now.month &&
                     date.year == now.year;
-                final isSelected = date.day == _selectedDate.day &&
-                    date.month == _selectedDate.month &&
-                    date.year == _selectedDate.year;
+
                 return Expanded(
                   child: GestureDetector(
                     onTap: () {
@@ -187,41 +194,23 @@ class _KalenderPageState extends State<KalenderPage> {
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       margin: const EdgeInsets.symmetric(horizontal: 2),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFF7AB8FF)
-                            : (isToday
-                                ? (isDarkMode ? const Color(0xFF2A3947) : Colors.grey[200])
-                                : Colors.transparent),
-                        borderRadius: BorderRadius.circular(10),
-                        border: isSelected
-                            ? Border.all(color: const Color(0xFF7AB8FF), width: 2)
-                            : null,
+                      padding: const EdgeInsets.only(
+                        left: 16,
+                        right: 16,
+                        top: 12,
+                        bottom: 12,
                       ),
+                      
                       child: Column(
                         children: [
                           Text(
                             date.day.toString(),
-                            style: TextStyle(
-                              color: isSelected || isToday
-                                  ? (isSelected ? Colors.white : textColor)
-                                  : (isDarkMode ? Colors.grey[400] : Colors.grey[600]),
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: TextStyle(),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             _getShortDayName(date.weekday),
-                            style: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : (isToday
-                                      ? (isDarkMode ? Colors.grey[400] : Colors.grey[600])
-                                      : (isDarkMode ? Colors.grey[600] : Colors.grey[500])),
-                              fontSize: 11,
-                            ),
+                            style: TextStyle(),
                           ),
                         ],
                       ),
@@ -291,12 +280,16 @@ class _KalenderPageState extends State<KalenderPage> {
                           border: Border(
                             left: index == 0
                                 ? BorderSide(
-                                    color: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
+                                    color: isDarkMode
+                                        ? Colors.grey[800]!
+                                        : Colors.grey[300]!,
                                     width: 0.5,
                                   )
                                 : BorderSide.none,
                             right: BorderSide(
-                              color: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
+                              color: isDarkMode
+                                  ? Colors.grey[800]!
+                                  : Colors.grey[300]!,
                               width: 0.5,
                             ),
                           ),
@@ -321,7 +314,8 @@ class _KalenderPageState extends State<KalenderPage> {
         child: Row(
           children: weekDays.map((date) {
             final dayName = _getDayName(date.weekday);
-            final jadwalForDay = allJadwal.where((j) => j.hari == dayName).toList();
+            final jadwalForDay =
+                allJadwal.where((j) => j.hari == dayName).toList();
             return Expanded(
               child: Stack(
                 children: jadwalForDay.map((jadwal) {
@@ -336,7 +330,8 @@ class _KalenderPageState extends State<KalenderPage> {
   }
 
   Widget _buildEventCard(Jadwal jadwal) {
-    final mataKuliah = _mataKuliahController.getMataKuliahById(jadwal.mataKuliahId);
+    final mataKuliah =
+        _mataKuliahController.getMataKuliahById(jadwal.mataKuliahId);
     final startParts = jadwal.jamMulai.split(':');
     final endParts = jadwal.jamSelesai.split(':');
     final startHour = int.parse(startParts[0]);
@@ -345,56 +340,114 @@ class _KalenderPageState extends State<KalenderPage> {
     final endMinute = int.parse(endParts[1]);
 
     final top = (startHour * 75.0) + (startMinute / 60 * 75.0);
-    final duration = ((endHour * 60 + endMinute) - (startHour * 60 + startMinute)) / 60;
+    final duration =
+        ((endHour * 60 + endMinute) - (startHour * 60 + startMinute)) / 60;
     final height = duration * 75.0;
+    final minHeight = 40.0;
+    final finalHeight = max(height, minHeight);
 
     Color color = const Color(0xFF7AB8FF);
     if (mataKuliah != null && mataKuliah.warna.isNotEmpty) {
       color = _hexToColor(mataKuliah.warna);
     }
 
+    // Dynamic font sizes berdasarkan tinggi
+    final titleFontSize = finalHeight < 60 ? 10.0 : 13.0;
+    final detailFontSize = finalHeight < 60 ? 9.0 : 11.0;
+    final iconSize = finalHeight < 60 ? 10.0 : 12.0;
+    final padding = finalHeight < 60 ? 4.0 : 8.0;
+
     return Positioned(
       top: top,
-      left: 2,
-      right: 2,
-      height: height - 2,
+      left: 0,
+      right: 0,
+      height: finalHeight,
       child: Container(
-        padding: const EdgeInsets.all(8),
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         decoration: BoxDecoration(
-          color: color,
+          color: color.withOpacity(0.85),
           borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.3),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              mataKuliah?.nama ?? 'Mata Kuliah',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () {
+              // Handle tap
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
+                child: Padding(
+                  padding: EdgeInsets.all(padding),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        mataKuliah?.nama ?? 'Mata Kuliah',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: titleFontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: finalHeight < 60 ? 1 : 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (finalHeight >= 50)
+                        SizedBox(height: finalHeight < 60 ? 2 : 4),
+                      Row(
+                        children: [
+                          Icon(Icons.access_time,
+                              color: Colors.white70, size: iconSize),
+                          SizedBox(width: finalHeight < 60 ? 2 : 4),
+                          Flexible(
+                            child: Text(
+                              '${jadwal.jamMulai.substring(0, 5)} - ${jadwal.jamSelesai.substring(0, 5)}',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: detailFontSize,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (jadwal.ruangan.isNotEmpty && finalHeight >= 70) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(Icons.location_on,
+                                color: Colors.white70, size: iconSize),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                jadwal.ruangan,
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: detailFontSize,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 2),
-            Text(
-              jadwal.ruangan,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+          ),
         ),
       ),
     );

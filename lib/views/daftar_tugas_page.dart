@@ -1,111 +1,146 @@
-// views/daftar_tugas_page.dart
+// views/edit_tugas_page.dart
 // ========================================
-// DAFTAR TUGAS PAGE - DENGAN MODERN NAVBAR & THEME
+// EDIT TUGAS PAGE - DENGAN DATETIME PICKER (FIXED)
 // ========================================
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../controllers/tugas_controller.dart';
 import '../controllers/mata_kuliah_controller.dart';
-import '../controllers/navigation_controller.dart';
 import '../models/tugas.dart';
-import '../widgets/modern_bottom_navbar.dart';
-import 'tambah_kelas_page.dart';
+import '../models/mata_kuliah.dart';
 
-class DaftarTugasPage extends StatefulWidget {
-  const DaftarTugasPage({Key? key}) : super(key: key);
+class EditTugasPage extends StatefulWidget {
+  final String tugasId;
+  const EditTugasPage({super.key, required this.tugasId});
 
   @override
-  State<DaftarTugasPage> createState() => _DaftarTugasPageState();
+  State<EditTugasPage> createState() => _EditTugasPageState();
 }
 
-class _DaftarTugasPageState extends State<DaftarTugasPage>
-    with SingleTickerProviderStateMixin {
+class _EditTugasPageState extends State<EditTugasPage> {
   final TugasController _tugasController = TugasController();
   final MataKuliahController _mataKuliahController = MataKuliahController();
-  final NavigationController _navigationController = NavigationController();
-  TabController? _tabController;
-  int _selectedTab = 0;
+
+  late TextEditingController _judulController;
+  late TextEditingController _keteranganController;
+  late MataKuliah? _selectedMataKuliah;
+  late bool _isPrioritas;
+  late DateTime _selectedDateTime;
+
+  Tugas? _tugas;
 
   @override
   void initState() {
     super.initState();
-    _navigationController.setIndex(3); // Assignments page
-    _tabController = TabController(length: 3, vsync: this);
-    _tabController!.addListener(() {
-      setState(() {
-        _selectedTab = _tabController!.index;
-      });
-    });
+    _loadData();
+  }
+
+  void _loadData() {
+    _tugas = _tugasController.getTugasById(widget.tugasId);
+    if (_tugas != null) {
+      _judulController = TextEditingController(text: _tugas!.judul);
+      _keteranganController = TextEditingController(text: _tugas!.keterangan);
+      _selectedMataKuliah = _mataKuliahController.getMataKuliahById(_tugas!.mataKuliahId);
+      _isPrioritas = _tugas!.isPrioritas;
+      _selectedDateTime = _tugas!.tanggal;
+    }
   }
 
   @override
   void dispose() {
-    _tabController?.dispose();
-    _navigationController.dispose();
+    _judulController.dispose();
+    _keteranganController.dispose();
     super.dispose();
   }
 
-  Color _hexToColor(String hexString) {
-    if (hexString.isEmpty) return const Color(0xFF7AB8FF);
-    final buffer = StringBuffer();
-    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
-    buffer.write(hexString.replaceFirst('#', ''));
-    return Color(int.parse(buffer.toString(), radix: 16));
-  }
+  Future<void> _selectDateTime(BuildContext context) async {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    // Pilih tanggal
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDateTime,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2030),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: const Color(0xFF7AB8FF),
+              onPrimary: Colors.white,
+              surface: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
+              onSurface: isDarkMode ? Colors.white : const Color(0xFF1E2936),
+            ),
+            dialogBackgroundColor: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
+          ),
+          child: child!,
+        );
+      },
+    );
 
-  Map<String, List<Tugas>> _groupTugasByDate(List<Tugas> tugasList) {
-    final Map<String, List<Tugas>> grouped = {};
-    final now = DateTime.now();
-    for (var tugas in tugasList) {
-      final date = tugas.tanggal;
-      String label;
-      if (date.year == now.year && date.month == now.month && date.day == now.day) {
-        label = 'Hari ini - ${DateFormat('d MMMM yyyy', 'id_ID').format(date)}';
-      } else if (date.year == now.year &&
-          date.month == now.month &&
-          date.day == now.day + 1) {
-        label = 'Besok - ${DateFormat('d MMMM yyyy', 'id_ID').format(date)}';
-      } else {
-        label = DateFormat('EEEE - d MMMM yyyy', 'id_ID').format(date);
-      }
-      if (!grouped.containsKey(label)) {
-        grouped[label] = [];
-      }
-      grouped[label]!.add(tugas);
-    }
-    return grouped;
-  }
+    if (pickedDate != null) {
+      // Pilih waktu dengan format 24 jam dan mode input
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
+        initialEntryMode: TimePickerEntryMode.input,
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.dark(
+                primary: const Color(0xFF7AB8FF),
+                onPrimary: Colors.white,
+                surface: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
+                onSurface: isDarkMode ? Colors.white : const Color(0xFF1E2936),
+              ),
+              dialogBackgroundColor: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
+              timePickerTheme: TimePickerThemeData(
+                hourMinuteTextStyle: TextStyle(
+                  fontSize: 40,
+                  color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
+                ),
+                dayPeriodTextStyle: TextStyle(
+                  color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
+                ),
+              ),
+            ),
+            child: MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                alwaysUse24HourFormat: true,
+              ),
+              child: child!,
+            ),
+          );
+        },
+      );
 
-  List<Tugas> _getFilteredTugas() {
-    final allTugas = _tugasController.getAllTugas();
-    switch (_selectedTab) {
-      case 0: // Tenggat
-        allTugas.sort((a, b) => a.tanggal.compareTo(b.tanggal));
-        return allTugas;
-      case 1: // Kelas
-        allTugas.sort((a, b) => a.mataKuliahNama.compareTo(b.mataKuliahNama));
-        return allTugas;
-      case 2: // Prioritas
-        return allTugas.where((t) => t.isPrioritas).toList();
-      default:
-        return allTugas;
+      if (pickedTime != null) {
+        setState(() {
+          _selectedDateTime = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            pickedTime.hour,
+            pickedTime.minute,
+          );
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final allMataKuliah = _mataKuliahController.getAllMataKuliah();
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
-    final textColor = Theme.of(context).colorScheme.onSurface;
     final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).colorScheme.onSurface;
 
-    if (_tabController == null) {
+    if (_tugas == null) {
       return Scaffold(
         backgroundColor: bgColor,
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -114,257 +149,318 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
       appBar: AppBar(
         backgroundColor: bgColor,
         elevation: 0,
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: textColor),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
-          'Tugas',
+          'Edit Tugas',
           style: TextStyle(
             color: textColor,
-            fontSize: 28,
+            fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
-      ),
-      body: Column(
-        children: [
-          _buildTabBar(isDarkMode, cardColor),
-          Expanded(
-            child: _buildTugasList(isDarkMode, cardColor, textColor),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete, color: Color(0xFFFF6B6B)),
+            onPressed: _deleteTugas,
           ),
         ],
       ),
-      bottomNavigationBar: ModernBottomNavbar(
-        controller: _navigationController,
-        currentIndex: 3,
-        onAddPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const TambahKelasPage()),
-          ).then((_) => setState(() {}));
-        },
-      ),
-    );
-  }
-
-  Widget _buildTabBar(bool isDarkMode, Color cardColor) {
-    if (_tabController == null) {
-      return const SizedBox.shrink();
-    }
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: TabBar(
-        controller: _tabController,
-        indicator: BoxDecoration(
-          color: const Color(0xFF7AB8FF),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        labelColor: Colors.white,
-        unselectedLabelColor: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-        labelStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        ),
-        tabs: const [
-          Tab(text: 'Tenggat'),
-          Tab(text: 'Kelas'),
-          Tab(text: 'Prioritas'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTugasList(bool isDarkMode, Color cardColor, Color textColor) {
-    final tugasList = _getFilteredTugas();
-    if (tugasList.isEmpty) {
-      return Center(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              Icons.assignment_outlined,
-              size: 64,
-              color: isDarkMode ? Colors.grey[700] : Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
             Text(
-              'Belum ada tugas',
+              'Tugas',
               style: TextStyle(
-                color: isDarkMode ? Colors.grey[600] : Colors.grey[500],
-                fontSize: 16,
+                color: isDarkMode ? Colors.grey : Colors.grey[700],
+                fontSize: 14,
               ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _judulController,
+              style: TextStyle(color: textColor),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: cardColor,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 15,
+                ),
+              ),
+            ),
+            const SizedBox(height: 25),
+            Text(
+              'Mata Kuliah',
+              style: TextStyle(
+                color: isDarkMode ? Colors.grey : Colors.grey[700],
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: DropdownButtonFormField<MataKuliah>(
+                value: _selectedMataKuliah,
+                dropdownColor: cardColor,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 15,
+                  ),
+                ),
+                icon: Icon(Icons.arrow_drop_down, color: textColor),
+                items: allMataKuliah.map((mk) {
+                  return DropdownMenuItem<MataKuliah>(
+                    value: mk,
+                    child: Text(
+                      '${mk.kode} - ${mk.nama}',
+                      style: TextStyle(color: textColor),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedMataKuliah = value;
+                  });
+                },
+              ),
+            ),
+            const SizedBox(height: 25),
+            Text(
+              'Keterangan',
+              style: TextStyle(
+                color: isDarkMode ? Colors.grey : Colors.grey[700],
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _keteranganController,
+              maxLines: 4,
+              style: TextStyle(color: textColor),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: cardColor,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.all(20),
+              ),
+            ),
+            const SizedBox(height: 25),
+            Row(
+              children: [
+                Checkbox(
+                  value: _isPrioritas,
+                  onChanged: (value) {
+                    setState(() {
+                      _isPrioritas = value ?? false;
+                    });
+                  },
+                  activeColor: const Color(0xFF7AB8FF),
+                  side: BorderSide(color: isDarkMode ? Colors.grey : Colors.grey[600]!),
+                ),
+                Text(
+                  'Jadikan Prioritas',
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 25),
+            Text(
+              'Deadline',
+              style: TextStyle(
+                color: textColor,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 10),
+            InkWell(
+              onTap: () => _selectDateTime(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(_selectedDateTime),
+                            style: const TextStyle(
+                              color: Color(0xFF7AB8FF),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            DateFormat('HH:mm').format(_selectedDateTime),
+                            style: TextStyle(
+                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.calendar_today,
+                      color: Color(0xFF7AB8FF),
+                      size: 20,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 40),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF6B6B),
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      'Batal',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _updateTugas,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF7AB8FF),
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      'Update',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-      );
-    }
-
-    if (_selectedTab == 0) {
-      // Group by date for Tenggat tab
-      final grouped = _groupTugasByDate(tugasList);
-      return ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-        itemCount: grouped.length,
-        itemBuilder: (context, index) {
-          final dateLabel = grouped.keys.elementAt(index);
-          final tugasGroup = grouped[dateLabel]!;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Text(
-                  dateLabel,
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              ...tugasGroup.map((tugas) => _buildTugasCard(tugas, isDarkMode, cardColor, textColor)),
-              const SizedBox(height: 16),
-            ],
-          );
-        },
-      );
-    } else {
-      // Simple list for other tabs
-      return ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-        itemCount: tugasList.length,
-        itemBuilder: (context, index) {
-          return _buildTugasCard(tugasList[index], isDarkMode, cardColor, textColor);
-        },
-      );
-    }
+      ),
+    );
   }
 
-  Widget _buildTugasCard(Tugas tugas, bool isDarkMode, Color cardColor, Color textColor) {
-    final mataKuliah = _mataKuliahController.getMataKuliahById(tugas.mataKuliahId);
-    Color borderColor = const Color(0xFF7AB8FF);
-    if (mataKuliah != null && mataKuliah.warna.isNotEmpty) {
-      borderColor = _hexToColor(mataKuliah.warna);
+  void _updateTugas() {
+    if (_judulController.text.isEmpty || _selectedMataKuliah == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mohon lengkapi data tugas'),
+          backgroundColor: Color(0xFFFF6B6B),
+        ),
+      );
+      return;
     }
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: borderColor.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+    _tugas!.judul = _judulController.text;
+    _tugas!.mataKuliahId = _selectedMataKuliah!.id;
+    _tugas!.mataKuliahNama = _selectedMataKuliah!.nama;
+    _tugas!.keterangan = _keteranganController.text;
+    _tugas!.isPrioritas = _isPrioritas;
+    _tugas!.tanggal = _selectedDateTime;
+
+    _tugasController.updateTugas(_tugas!);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Tugas berhasil diupdate'),
+        backgroundColor: Color(0xFF4ECCA3),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    tugas.mataKuliahNama,
-                    style: TextStyle(
-                      color: borderColor,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+    );
+    Navigator.pop(context, true);
+  }
+
+  void _deleteTugas() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
+        title: Text(
+          'Hapus Tugas',
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
+          ),
+        ),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus tugas ini?',
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () {
+              _tugasController.deleteTugas(_tugas!.id);
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context, true); // Close edit page dengan result
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Tugas berhasil dihapus'),
+                  backgroundColor: Color(0xFFFF6B6B),
                 ),
-                Icon(Icons.edit, color: borderColor, size: 20),
-              ],
+              );
+            },
+            child: const Text(
+              'Hapus',
+              style: TextStyle(color: Color(0xFFFF6B6B)),
             ),
           ),
-          // Main Task Title
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      final allChecked = tugas.checklistStatus.every((status) => status);
-                      for (int i = 0; i < tugas.checklistStatus.length; i++) {
-                        _tugasController.updateChecklistStatus(
-                          tugas.id,
-                          i,
-                          !allChecked,
-                        );
-                      }
-                    });
-                  },
-                  child: Container(
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: tugas.checklistStatus.every((s) => s)
-                          ? const Color(0xFFFFB84D)
-                          : Colors.transparent,
-                      border: Border.all(
-                        color: tugas.checklistStatus.every((s) => s)
-                            ? const Color(0xFFFFB84D)
-                            : (isDarkMode ? Colors.grey[600]! : Colors.grey[400]!),
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: tugas.checklistStatus.every((s) => s)
-                        ? const Icon(Icons.check, color: Colors.white, size: 14)
-                        : null,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        tugas.judul,
-                        style: TextStyle(
-                          color: tugas.checklistStatus.every((s) => s)
-                              ? (isDarkMode ? Colors.grey[600] : Colors.grey[500])
-                              : textColor,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          decoration: tugas.checklistStatus.every((s) => s)
-                              ? TextDecoration.lineThrough
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Note from checklist',
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.grey[600] : Colors.grey[500],
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
         ],
       ),
     );
