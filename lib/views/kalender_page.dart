@@ -133,9 +133,8 @@ class _KalenderPageState extends State<KalenderPage> {
     );
   }
 
-  Widget _buildWeekHeader(
+Widget _buildWeekHeader(
       List<DateTime> weekDays, bool isDarkMode, Color textColor) {
-    final now = DateTime.now();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
@@ -153,15 +152,12 @@ class _KalenderPageState extends State<KalenderPage> {
                   });
                 },
               ),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                child: Text(
-                  '${DateFormat('MMMM yyyy', 'id_ID').format(weekDays.first)}',
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+              Text(
+                '${DateFormat('MMMM yyyy', 'id_ID').format(weekDays.first)}',
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               IconButton(
@@ -180,40 +176,28 @@ class _KalenderPageState extends State<KalenderPage> {
             children: [
               const SizedBox(width: 10),
               ...weekDays.map((date) {
-                final isToday = date.day == now.day &&
-                    date.month == now.month &&
-                    date.year == now.year;
-
                 return Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedDate = date;
-                      });
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      margin: const EdgeInsets.symmetric(horizontal: 2),
-                      padding: const EdgeInsets.only(
-                        left: 16,
-                        right: 16,
-                        top: 12,
-                        bottom: 12,
-                      ),
-                      
-                      child: Column(
-                        children: [
-                          Text(
-                            date.day.toString(),
-                            style: TextStyle(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Column(
+                      children: [
+                        Text(
+                          date.day.toString(),
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            _getShortDayName(date.weekday),
-                            style: TextStyle(),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _getShortDayName(date.weekday),
+                          style: TextStyle(
+                            color: textColor.withOpacity(0.6),
+                            fontSize: 11,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 );
