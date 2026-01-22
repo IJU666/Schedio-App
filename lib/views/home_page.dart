@@ -11,6 +11,7 @@ import '../controllers/mata_kuliah_controller.dart';
 import '../controllers/navigation_controller.dart';
 import '../models/jadwal.dart';
 import '../models/tugas.dart';
+import '../services/schedule_manager.dart';
 import '../models/mata_kuliah.dart';
 import '../widgets/modern_bottom_navbar.dart';
 import 'tambah_tugas_page.dart';
@@ -601,50 +602,52 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showDeleteDialog(String jadwalId, String? mataKuliahId) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
-        title: Text(
-          'Hapus Kelas',
-          style: TextStyle(color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
-        ),
-        content: Text(
-          'Apakah Anda yakin ingin menghapus kelas ini?',
-          style: TextStyle(color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () {
-              _jadwalController.deleteJadwal(jadwalId);
-              if (mataKuliahId != null) {
-                _mataKuliahController.deleteMataKuliah(mataKuliahId);
-              }
-              Navigator.pop(context);
-              setState(() {});
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Kelas berhasil dihapus'),
-                  backgroundColor: Color(0xFFFF6B6B),
-                ),
-              );
-            },
-            child: const Text(
-              'Hapus',
-              style: TextStyle(color: Color(0xFFFF6B6B)),
-            ),
-          ),
-        ],
+void _showDeleteDialog(String jadwalId, String? mataKuliahId) async {
+  final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+  
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      backgroundColor: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
+      title: Text(
+        'Hapus Kelas',
+        style: TextStyle(color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
       ),
-    );
-  }
+      content: Text(
+        'Apakah Anda yakin ingin menghapus kelas ini?',
+        style: TextStyle(color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Batal'),
+        ),
+        TextButton(
+          onPressed: () async {
+            await ScheduleManager().removeSchedule(jadwalId);
+            
+            _jadwalController.deleteJadwal(jadwalId);
+            if (mataKuliahId != null) {
+              _mataKuliahController.deleteMataKuliah(mataKuliahId);
+            }
+            Navigator.pop(context);
+            setState(() {});
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Kelas berhasil dihapus'),
+                backgroundColor: Color(0xFFFF6B6B),
+              ),
+            );
+          },
+          child: const Text(
+            'Hapus',
+            style: TextStyle(color: Color(0xFFFF6B6B)),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   void _showDeleteTugasDialog(String tugasId) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;

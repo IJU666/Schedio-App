@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../controllers/mata_kuliah_controller.dart';
 import '../controllers/jadwal_controller.dart';
+import '../services/schedule_manager.dart';
 import '../models/mata_kuliah.dart';
 import '../models/jadwal.dart';
 
@@ -760,71 +761,74 @@ class _TambahKelasPageState extends State<TambahKelasPage> {
     );
   }
 
-  void _saveMataKuliah() {
-    if (_namaController.text.trim().isEmpty ||
-        _ruanganController.text.trim().isEmpty ||
-        _dosenController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Mohon lengkapi semua field'),
-          backgroundColor: Color(0xFFFF6B6B),
-        ),
-      );
-      return;
-    }
-
-    if (_isTimeEmpty(_jamMulai) || _isTimeEmpty(_jamSelesai)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Jam mulai dan jam selesai wajib diisi'),
-          backgroundColor: Color(0xFFFF6B6B),
-        ),
-      );
-      return;
-    }
-
-    if (!_isEndTimeAfterStart(_jamMulai, _jamSelesai)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Jam selesai harus lebih besar dari jam mulai'),
-          backgroundColor: Color(0xFFFF6B6B),
-        ),
-      );
-      return;
-    }
-
-    final mataKuliahId = DateTime.now().millisecondsSinceEpoch.toString();
-    final mataKuliah = MataKuliah(
-      id: mataKuliahId,
-      kode: '',
-      nama: _namaController.text,
-      ruangan: _ruanganController.text,
-      sks: 0,
-      dosen: _dosenController.text,
-      warna: _colorToHex(_selectedColor),
-    );
-
-    final jadwal = Jadwal(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      mataKuliahId: mataKuliahId,
-      hari: _selectedHari,
-      jamMulai:
-          '${_jamMulai.hour.toString().padLeft(2, '0')}:${_jamMulai.minute.toString().padLeft(2, '0')}',
-      jamSelesai:
-          '${_jamSelesai.hour.toString().padLeft(2, '0')}:${_jamSelesai.minute.toString().padLeft(2, '0')}',
-      ruangan: _ruanganController.text,
-    );
-
-    _mataKuliahController.addMataKuliah(mataKuliah);
-    _jadwalController.addJadwal(jadwal);
-
+  void _saveMataKuliah() async {
+  if (_namaController.text.trim().isEmpty ||
+      _ruanganController.text.trim().isEmpty ||
+      _dosenController.text.trim().isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Kelas berhasil ditambahkan'),
-        backgroundColor: Color(0xFF4ECCA3),
+        content: Text('Mohon lengkapi semua field'),
+        backgroundColor: Color(0xFFFF6B6B),
       ),
     );
-
-    Navigator.pop(context);
+    return;
   }
+
+  if (_isTimeEmpty(_jamMulai) || _isTimeEmpty(_jamSelesai)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Jam mulai dan jam selesai wajib diisi'),
+        backgroundColor: Color(0xFFFF6B6B),
+      ),
+    );
+    return;
+  }
+
+  if (!_isEndTimeAfterStart(_jamMulai, _jamSelesai)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Jam selesai harus lebih besar dari jam mulai'),
+        backgroundColor: Color(0xFFFF6B6B),
+      ),
+    );
+    return;
+  }
+
+  final mataKuliahId = DateTime.now().millisecondsSinceEpoch.toString();
+  final mataKuliah = MataKuliah(
+    id: mataKuliahId,
+    kode: '',
+    nama: _namaController.text,
+    ruangan: _ruanganController.text,
+    sks: 0,
+    dosen: _dosenController.text,
+    warna: _colorToHex(_selectedColor),
+  );
+
+  final jadwalId = DateTime.now().millisecondsSinceEpoch.toString();
+  final jadwal = Jadwal(
+    id: jadwalId,
+    mataKuliahId: mataKuliahId,
+    hari: _selectedHari,
+    jamMulai:
+        '${_jamMulai.hour.toString().padLeft(2, '0')}:${_jamMulai.minute.toString().padLeft(2, '0')}',
+    jamSelesai:
+        '${_jamSelesai.hour.toString().padLeft(2, '0')}:${_jamSelesai.minute.toString().padLeft(2, '0')}',
+    ruangan: _ruanganController.text,
+  );
+
+  _mataKuliahController.addMataKuliah(mataKuliah);
+  _jadwalController.addJadwal(jadwal);
+
+  await ScheduleManager().addSchedule(jadwalId);
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('Kelas berhasil ditambahkan'),
+      backgroundColor: Color(0xFF4ECCA3),
+    ),
+  );
+
+  Navigator.pop(context);
+}
 }
