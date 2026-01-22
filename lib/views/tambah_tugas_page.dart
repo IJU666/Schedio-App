@@ -193,7 +193,7 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
                   ),
                 ),
                 hint: Text(
-                  'PPB 666 - Pemograman Perangkat Bergerak',
+                  'Mata Kuliah',
                   style: TextStyle(color: textColor),
                 ),
                 icon: Icon(Icons.arrow_drop_down, color: textColor),
