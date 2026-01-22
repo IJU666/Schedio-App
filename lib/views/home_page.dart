@@ -1,6 +1,6 @@
 // views/home_page.dart
 // ========================================
-// HOME PAGE - DENGAN THEME SUPPORT
+// HOME PAGE - DENGAN GRID TANGGAL RAPAT
 // ========================================
 
 import 'package:flutter/material.dart';
@@ -58,7 +58,7 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           children: [
             _buildHeader(textColor),
-            _buildDateSelector(isDarkMode, cardColor, textColor),
+            _buildDateGridSelector(isDarkMode, cardColor, textColor),
             Expanded(
               child: _buildScheduleList(isDarkMode, cardColor, textColor),
             ),
@@ -80,7 +80,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildHeader(Color textColor) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
       child: Column(
         children: [
           Text(
@@ -96,112 +96,120 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildDateSelector(bool isDarkMode, Color cardColor, Color textColor) {
+  Widget _buildDateGridSelector(bool isDarkMode, Color cardColor, Color textColor) {
     final today = DateTime.now();
     final dates = List.generate(7, (index) {
       return today.add(Duration(days: index - 1));
     });
 
-    return Container(
-      height: 90,
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final itemWidth = (constraints.maxWidth - (15 * (dates.length - 1))) /
-              dates.length;
-          return ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: dates.length,
-            itemBuilder: (context, index) {
-              final date = dates[index];
-              final isSelected = date.day == selectedDate.day &&
-                  date.month == selectedDate.month &&
-                  date.year == selectedDate.year;
-              final tugasCount = _tugasController.getTugasByDate(date).length;
-              final hasNotification = tugasCount > 0;
+    // Tentukan border radius berdasarkan lebar layar
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isPortraitMobile = screenWidth < 600;
+    final dateBorderRadius = isPortraitMobile ? 10.0 : 15.0;
 
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    selectedDate = date;
-                  });
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  width: itemWidth,
-                  margin: EdgeInsets.only(right: index < dates.length - 1 ? 15 : 0),
-                  decoration: BoxDecoration(
-                    color: isSelected 
-                        ? const Color(0xFF7AB8FF) 
-                        : cardColor,
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: const Color(0xFF7AB8FF).withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ]
-                        : [],
-                  ),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          date.day.toString(),
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected 
-                                ? Colors.white 
-                                : (isDarkMode ? Colors.grey[400] : Colors.grey[700]),
-                          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 7,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
+          childAspectRatio: 0.52,
+        ),
+        itemCount: dates.length,
+        itemBuilder: (context, index) {
+          final date = dates[index];
+          final isSelected = date.day == selectedDate.day &&
+              date.month == selectedDate.month &&
+              date.year == selectedDate.year;
+          final tugasCount = _tugasController.getTugasByDate(date).length;
+          final hasNotification = tugasCount > 0;
+
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                selectedDate = date;
+              });
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              decoration: BoxDecoration(
+                color: isSelected 
+                    ? const Color(0xFF7AB8FF) 
+                    : cardColor,
+                borderRadius: BorderRadius.circular(dateBorderRadius),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFF7AB8FF).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
                         ),
-                        const SizedBox(height: 5),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              DateFormat('EEE', 'id_ID').format(date),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isSelected
-                                    ? Colors.white
-                                    : (isDarkMode ? Colors.grey[500] : Colors.grey[600]),
+                      ]
+                    : [],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 8),
+                    Text(
+                      date.day.toString(),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: isSelected 
+                            ? Colors.white 
+                            : (isDarkMode ? Colors.grey[400] : Colors.grey[700]),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      DateFormat('EEE', 'id_ID').format(date),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isSelected
+                            ? Colors.white
+                            : (isDarkMode ? Colors.grey[500] : Colors.grey[600]),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 6),
+                    SizedBox(
+                      height: 18,
+                      child: hasNotification
+                          ? Container(
+                              constraints: const BoxConstraints(
+                                minWidth: 18,
+                                minHeight: 18,
                               ),
-                            ),
-                            if (hasNotification) ...[
-                              const SizedBox(width: 4),
-                              Container(
-                                width: 18,
-                                height: 18,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFFF6B6B),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    tugasCount.toString(),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                              padding: const EdgeInsets.all(3),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFFF6B6B),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  tugasCount.toString(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    height: 1,
                                   ),
                                 ),
                               ),
-                            ],
-                          ],
-                        ),
-                      ],
+                            )
+                          : const SizedBox.shrink(),
                     ),
-                  ),
+                  ],
                 ),
-              );
-            },
+              ),
+            ),
           );
         },
       ),
