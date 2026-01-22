@@ -1,14 +1,19 @@
 // views/pengaturan_page.dart
 // ========================================
-// PENGATURAN PAGE - DENGAN DARK MODE TOGGLE
+// PENGATURAN PAGE - DENGAN DYNAMIC DATA DARI DATABASE
 // ========================================
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/theme_controller.dart';
 import '../controllers/navigation_controller.dart';
+import '../controllers/mata_kuliah_controller.dart';
+import '../controllers/jadwal_controller.dart';
+import '../models/mata_kuliah.dart';
+import '../models/jadwal.dart';
 import '../widgets/modern_bottom_navbar.dart';
 import 'tambah_kelas_page.dart';
+import 'edit_kelas_page.dart';
 
 class PengaturanPage extends StatefulWidget {
   const PengaturanPage({Key? key}) : super(key: key);
@@ -20,36 +25,85 @@ class PengaturanPage extends StatefulWidget {
 class _PengaturanPageState extends State<PengaturanPage> {
   bool isPengingatEnabled = true;
   final NavigationController _navigationController = NavigationController();
-
-  final List<CourseItem> courses = [
-    CourseItem(
-      name: 'EC 202 - Principles Microeconomics',
-      color: const Color(0xFF6B7FFF),
-    ),
-    CourseItem(
-      name: 'EC 203 - Principles Macroeconomics',
-      color: const Color(0xFF4ECDC4),
-    ),
-    CourseItem(
-      name: 'FN 215 - Financial Management',
-      color: const Color(0xFF6B7FFF),
-    ),
-    CourseItem(
-      name: 'MGT 101 - Organization Management',
-      color: const Color(0xFFFFB86C),
-    ),
-  ];
+  final MataKuliahController _mataKuliahController = MataKuliahController();
+  final JadwalController _jadwalController = JadwalController();
+  
+  List<CourseItemData> courses = [];
 
   @override
   void initState() {
     super.initState();
     _navigationController.setIndex(4);
+    _loadCourses();
+  }
+
+  void _loadCourses() {
+    // Ambil semua mata kuliah dan jadwal dari controller
+    final allMataKuliah = _mataKuliahController.getAllMataKuliah();
+    final allJadwal = _jadwalController.getAllJadwal();
+    
+    setState(() {
+      courses = allMataKuliah.map((mataKuliah) {
+        // Cari jadwal yang sesuai dengan mata kuliah ini
+        final jadwal = allJadwal.firstWhere(
+          (j) => j.mataKuliahId == mataKuliah.id,
+          orElse: () => Jadwal(
+            id: '',
+            mataKuliahId: mataKuliah.id,
+            hari: '',
+            jamMulai: '',
+            jamSelesai: '',
+            ruangan: '',
+          ),
+        );
+        
+        return CourseItemData(
+          jadwalId: jadwal.id,
+          name: '${mataKuliah.kode.isNotEmpty ? mataKuliah.kode + ' - ' : ''}${mataKuliah.nama}',
+          color: _hexToColor(mataKuliah.warna),
+        );
+      }).toList();
+    });
+  }
+
+  Color _hexToColor(String hexString) {
+    if (hexString.isEmpty) return const Color(0xFF7AB8FF);
+    final buffer = StringBuffer();
+    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
+    buffer.write(hexString.replaceFirst('#', ''));
+    return Color(int.parse(buffer.toString(), radix: 16));
   }
 
   @override
   void dispose() {
     _navigationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _navigateToEditKelas(String jadwalId) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditKelasPage(jadwalId: jadwalId),
+      ),
+    );
+    
+    // Reload courses jika ada perubahan
+    if (result == true) {
+      _loadCourses();
+    }
+  }
+
+  Future<void> _navigateToTambahKelas() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const TambahKelasPage()),
+    );
+    
+    // Reload courses setelah menambah kelas baru
+    if (result == true || result == null) {
+      _loadCourses();
+    }
   }
 
   @override
@@ -79,84 +133,6 @@ class _PengaturanPageState extends State<PengaturanPage> {
                 ),
                 const SizedBox(height: 32),
                 
-                // Pengaturan Pribadi Section
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Pengaturan Pribadi',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        // Handle Edit
-                      },
-                      child: Row(
-                        children: [
-                          Text(
-                            'Edit',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: textColor,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.chevron_right,
-                            color: textColor,
-                            size: 20,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                
-                // User Info - Name
-                Row(
-                  children: [
-                    Icon(
-                      Icons.person,
-                      color: isDarkMode ? Colors.grey : Colors.grey[700],
-                      size: 20,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'UjangBedog',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: textColor,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                
-                // User Info - Email
-                Row(
-                  children: [
-                    Icon(
-                      Icons.email_outlined,
-                      color: isDarkMode ? Colors.grey : Colors.grey[700],
-                      size: 20,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'UjangBedog666@gmail.com',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: textColor,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                
                 // Pengaturan Kelas Section
                 Text(
                   'Pengaturan Kelas',
@@ -168,8 +144,58 @@ class _PengaturanPageState extends State<PengaturanPage> {
                 ),
                 const SizedBox(height: 16),
                 
-                // Course List
-                ...courses.map((course) => _buildCourseItem(course, isDarkMode, cardColor, textColor)).toList(),
+                // Course List - Dynamic from Database
+                if (courses.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? const Color(0xFF1A1F3A) : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.school_outlined,
+                            size: 48,
+                            color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Belum ada kelas',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Tambah kelas baru dengan tombol + di bawah',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: isDarkMode ? Colors.grey[700] : Colors.grey[500],
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  ...courses.map((course) => _buildCourseItem(
+                    course, 
+                    isDarkMode, 
+                    cardColor, 
+                    textColor
+                  )).toList(),
+                
                 const SizedBox(height: 24),
                 
                 // Pengingat Toggle
@@ -200,9 +226,7 @@ class _PengaturanPageState extends State<PengaturanPage> {
                 ),
                 const SizedBox(height: 8),
                 
-                // ========================================
-                // DARK MODE TOGGLE - FITUR UTAMA
-                // ========================================
+                // Dark Mode Toggle
                 Consumer<ThemeController>(
                   builder: (context, themeController, child) {
                     return AnimatedContainer(
@@ -245,55 +269,7 @@ class _PengaturanPageState extends State<PengaturanPage> {
                 ),
                 const SizedBox(height: 16),
                 
-                // Private Policy
-                GestureDetector(
-                  onTap: () {
-                    // Handle Private Policy
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.lock_outline,
-                              color: Color(0xFFFFB86C),
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Private policy',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: textColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              'More',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: isDarkMode ? Colors.grey : Colors.grey[700],
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.chevron_right,
-                              color: isDarkMode ? Colors.grey : Colors.grey[700],
-                              size: 20,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
+
               ],
             ),
           ),
@@ -304,17 +280,17 @@ class _PengaturanPageState extends State<PengaturanPage> {
       bottomNavigationBar: ModernBottomNavbar(
         controller: _navigationController,
         currentIndex: 4,
-        onAddPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const TambahKelasPage()),
-          ).then((_) => setState(() {}));
-        },
+        onAddPressed: _navigateToTambahKelas,
       ),
     );
   }
 
-  Widget _buildCourseItem(CourseItem course, bool isDarkMode, Color cardColor, Color textColor) {
+  Widget _buildCourseItem(
+    CourseItemData course, 
+    bool isDarkMode, 
+    Color cardColor, 
+    Color textColor
+  ) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.only(bottom: 12),
@@ -330,15 +306,13 @@ class _PengaturanPageState extends State<PengaturanPage> {
         ],
       ),
       child: InkWell(
-        onTap: () {
-          // Handle course tap
-        },
+        onTap: () => _navigateToEditKelas(course.jadwalId),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              // Color indicator
+              // Color indicator - Warna dari input user
               Container(
                 width: 4,
                 height: 40,
@@ -348,7 +322,7 @@ class _PengaturanPageState extends State<PengaturanPage> {
                 ),
               ),
               const SizedBox(width: 12),
-              // Course name
+              // Course name - Nama dari input user
               Expanded(
                 child: Text(
                   course.name,
@@ -385,11 +359,13 @@ class _PengaturanPageState extends State<PengaturanPage> {
   }
 }
 
-class CourseItem {
+class CourseItemData {
+  final String jadwalId;
   final String name;
   final Color color;
 
-  CourseItem({
+  CourseItemData({
+    required this.jadwalId,
     required this.name,
     required this.color,
   });

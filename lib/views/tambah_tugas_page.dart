@@ -1,6 +1,6 @@
 // views/tambah_tugas_page.dart
 // ========================================
-// TAMBAH TUGAS PAGE - DENGAN THEME SUPPORT
+// TAMBAH TUGAS PAGE - DENGAN DATETIME PICKER
 // ========================================
 
 import 'package:flutter/material.dart';
@@ -24,10 +24,7 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
   final TextEditingController _keteranganController = TextEditingController();
   MataKuliah? _selectedMataKuliah;
   bool _isPrioritas = false;
-  bool _setiapHari = false;
-  DateTime _selectedDate = DateTime.now();
-  bool _tenggatEnabled = true;
-  final int _hariSebelumKelas = 1;
+  DateTime _selectedDateTime = DateTime.now();
 
   @override
   void dispose() {
@@ -36,12 +33,13 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
     super.dispose();
   }
 
-  Future<void> _selectDate(BuildContext context) async {
+  Future<void> _selectDateTime(BuildContext context) async {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
-    final DateTime? picked = await showDatePicker(
+    // Pilih tanggal
+    final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
+      initialDate: _selectedDateTime,
       firstDate: DateTime.now(),
       lastDate: DateTime(2030),
       builder: (context, child) {
@@ -59,10 +57,54 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
         );
       },
     );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
+
+    if (pickedDate != null) {
+      // Pilih waktu dengan format 24 jam dan mode input
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
+        initialEntryMode: TimePickerEntryMode.input,
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.dark(
+                primary: const Color(0xFF7AB8FF),
+                onPrimary: Colors.white,
+                surface: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
+                onSurface: isDarkMode ? Colors.white : const Color(0xFF1E2936),
+              ),
+              dialogBackgroundColor: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
+              timePickerTheme: TimePickerThemeData(
+                hourMinuteTextStyle: TextStyle(
+                  fontSize: 40,
+                  color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
+                ),
+                dayPeriodTextStyle: TextStyle(
+                  color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
+                ),
+              ),
+            ),
+            child: MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                alwaysUse24HourFormat: true,
+              ),
+              child: child!,
+            ),
+          );
+        },
+      );
+
+      if (pickedTime != null) {
+        setState(() {
+          _selectedDateTime = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            pickedTime.hour,
+            pickedTime.minute,
+          );
+        });
+      }
     }
   }
 
@@ -220,7 +262,7 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
             ),
             const SizedBox(height: 25),
             Text(
-              'Setiap Hari',
+              'Deadline',
               style: TextStyle(
                 color: textColor,
                 fontSize: 16,
@@ -229,9 +271,9 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
             ),
             const SizedBox(height: 10),
             InkWell(
-              onTap: () => _selectDate(context),
+              onTap: () => _selectDateTime(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                 decoration: BoxDecoration(
                   color: cardColor,
                   borderRadius: BorderRadius.circular(10),
@@ -239,60 +281,37 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(_selectedDate),
-                      style: const TextStyle(
-                        color: Color(0xFF7AB8FF),
-                        fontSize: 14,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(_selectedDateTime),
+                            style: const TextStyle(
+                              color: Color(0xFF7AB8FF),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            DateFormat('HH:mm').format(_selectedDateTime),
+                            style: TextStyle(
+                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Switch(
-                      value: _setiapHari,
-                      onChanged: (value) {
-                        setState(() {
-                          _setiapHari = value;
-                        });
-                      },
-                      activeThumbColor: const Color(0xFF4ECCA3),
-                      inactiveThumbColor: isDarkMode ? Colors.grey : Colors.grey[400],
-                      inactiveTrackColor: isDarkMode ? Colors.grey[800] : Colors.grey[300],
+                    Icon(
+                      Icons.calendar_today,
+                      color: const Color(0xFF7AB8FF),
+                      size: 20,
                     ),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 25),
-            Text(
-              'Tenggat',
-              style: TextStyle(
-                color: textColor,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  '1 hari sebelum kelas',
-                  style: TextStyle(
-                    color: Color(0xFF7AB8FF),
-                    fontSize: 14,
-                  ),
-                ),
-                Switch(
-                  value: _tenggatEnabled,
-                  onChanged: (value) {
-                    setState(() {
-                      _tenggatEnabled = value;
-                    });
-                  },
-                  activeThumbColor: const Color(0xFF4ECCA3),
-                  inactiveThumbColor: isDarkMode ? Colors.grey : Colors.grey[400],
-                  inactiveTrackColor: isDarkMode ? Colors.grey[800] : Colors.grey[300],
-                ),
-              ],
             ),
             const SizedBox(height: 40),
             Row(
@@ -364,9 +383,9 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
       mataKuliahNama: _selectedMataKuliah!.nama,
       keterangan: _keteranganController.text,
       isPrioritas: _isPrioritas,
-      tanggal: _selectedDate,
-      setiapHari: _setiapHari,
-      hariSebelumKelas: _hariSebelumKelas,
+      tanggal: _selectedDateTime,
+      setiapHari: false,
+      hariSebelumKelas: 0,
       checklist: ['Checklist title 1', 'Checklist title 2', 'Checklist title 3'],
       checklistStatus: [true, true, false],
     );

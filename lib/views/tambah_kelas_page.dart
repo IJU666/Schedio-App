@@ -1,9 +1,10 @@
 // views/tambah_kelas_page.dart
 // ========================================
-// TAMBAH KELAS PAGE - DENGAN THEME SUPPORT
+// TAMBAH KELAS PAGE - DENGAN HYBRID TIME PICKER
 // ========================================
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../controllers/mata_kuliah_controller.dart';
 import '../controllers/jadwal_controller.dart';
@@ -23,6 +24,7 @@ class _TambahKelasPageState extends State<TambahKelasPage> {
   final TextEditingController _namaController = TextEditingController();
   final TextEditingController _ruanganController = TextEditingController();
   final TextEditingController _dosenController = TextEditingController();
+  
   TimeOfDay _jamMulai = const TimeOfDay(hour: 0, minute: 0);
   TimeOfDay _jamSelesai = const TimeOfDay(hour: 0, minute: 0);
   String _selectedHari = 'Senin';
@@ -49,6 +51,16 @@ class _TambahKelasPageState extends State<TambahKelasPage> {
   String _colorToHex(Color color) {
     return '#${color.value.toRadixString(16).substring(2).toUpperCase()}';
   }
+bool _isEndTimeAfterStart(TimeOfDay start, TimeOfDay end) {
+  final startMinutes = start.hour * 60 + start.minute;
+  final endMinutes = end.hour * 60 + end.minute;
+  return endMinutes > startMinutes;
+}
+
+bool _isTimeEmpty(TimeOfDay time) {
+  return time.hour == 0 && time.minute == 0;
+}
+
 
   Future<void> _selectTime(BuildContext context, bool isStartTime) async {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -58,6 +70,15 @@ class _TambahKelasPageState extends State<TambahKelasPage> {
       builder: (BuildContext context) {
         int selectedHour = isStartTime ? _jamMulai.hour : _jamSelesai.hour;
         int selectedMinute = isStartTime ? _jamMulai.minute : _jamSelesai.minute;
+        
+        // Controllers untuk input manual di dalam dialog
+        final hourController = TextEditingController(text: selectedHour.toString().padLeft(2, '0'));
+        final minuteController = TextEditingController(text: selectedMinute.toString().padLeft(2, '0'));
+        
+        // Controllers untuk scroll wheel
+        final hourScrollController = FixedExtentScrollController(initialItem: selectedHour);
+        final minuteScrollController = FixedExtentScrollController(initialItem: selectedMinute);
+        
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
@@ -66,6 +87,8 @@ class _TambahKelasPageState extends State<TambahKelasPage> {
                 isStartTime ? 'Pilih Jam Mulai' : 'Pilih Jam Selesai',
                 style: TextStyle(
                   color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               content: Column(
@@ -74,82 +97,233 @@ class _TambahKelasPageState extends State<TambahKelasPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      SizedBox(
-                        width: 80,
-                        height: 200,
-                        child: ListWheelScrollView.useDelegate(
-                          itemExtent: 50,
-                          perspective: 0.005,
-                          diameterRatio: 1.2,
-                          physics: const FixedExtentScrollPhysics(),
-                          controller: FixedExtentScrollController(initialItem: selectedHour),
-                          onSelectedItemChanged: (index) {
-                            setDialogState(() {
-                              selectedHour = index;
-                            });
-                          },
-                          childDelegate: ListWheelChildBuilderDelegate(
-                            childCount: 24,
-                            builder: (context, index) {
-                              return Center(
-                                child: Text(
-                                  index.toString().padLeft(2, '0'),
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    color: selectedHour == index
-                                        ? const Color(0xFF7AB8FF)
-                                        : (isDarkMode ? Colors.grey : Colors.grey[600]),
-                                    fontWeight: selectedHour == index
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                  ),
-                                ),
-                              );
-                            },
+                      // JAM - Hybrid Input
+                      Column(
+                        children: [
+                          // Input field untuk jam
+                          Container(
+                            width: 70,
+                            height: 45,
+                            decoration: BoxDecoration(
+                              color: isDarkMode ? const Color(0xFF1E2936) : Colors.grey[100],
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: const Color(0xFF7AB8FF),
+                                width: 2,
+                              ),
+                            ),
+                            child: TextField(
+                              controller: hourController,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF7AB8FF),
+                              ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(2),
+                              ],
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                                isDense: true,
+                              ),
+                              onTap: () {
+                                // Select all text when tapped for easier editing
+                                hourController.selection = TextSelection(
+                                  baseOffset: 0,
+                                  extentOffset: hourController.text.length,
+                                );
+                              },
+                              onChanged: (value) {
+                                if (value.isEmpty) return;
+                                
+                                int? hour = int.tryParse(value);
+                                if (hour != null && hour >= 0 && hour < 24) {
+                                  setDialogState(() {
+                                    selectedHour = hour;
+                                    // Format to 2 digits if length is 2
+                                    if (value.length == 2) {
+                                      hourController.text = hour.toString().padLeft(2, '0');
+                                      hourController.selection = TextSelection.fromPosition(
+                                        TextPosition(offset: hourController.text.length),
+                                      );
+                                    }
+                                    hourScrollController.jumpToItem(hour);
+                                  });
+                                } else if (hour != null && hour >= 24) {
+                                  // If input exceeds 23, reset to valid value
+                                  setDialogState(() {
+                                    hourController.text = '23';
+                                    selectedHour = 23;
+                                    hourScrollController.jumpToItem(23);
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          // Scroll wheel untuk jam
+                          SizedBox(
+                            width: 80,
+                            height: 150,
+                            child: ListWheelScrollView.useDelegate(
+                              itemExtent: 40,
+                              perspective: 0.005,
+                              diameterRatio: 1.5,
+                              physics: const FixedExtentScrollPhysics(),
+                              controller: hourScrollController,
+                              onSelectedItemChanged: (index) {
+                                setDialogState(() {
+                                  selectedHour = index;
+                                  hourController.text = index.toString().padLeft(2, '0');
+                                });
+                              },
+                              childDelegate: ListWheelChildBuilderDelegate(
+                                childCount: 24,
+                                builder: (context, index) {
+                                  return Center(
+                                    child: Text(
+                                      index.toString().padLeft(2, '0'),
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        color: selectedHour == index
+                                            ? const Color(0xFF7AB8FF)
+                                            : (isDarkMode ? Colors.grey[600] : Colors.grey[500]),
+                                        fontWeight: selectedHour == index
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      // Separator
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                        child: Text(
+                          ':',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
                           ),
                         ),
                       ),
-                      Text(
-                        ' : ',
-                        style: TextStyle(
-                          fontSize: 32,
-                          color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 80,
-                        height: 200,
-                        child: ListWheelScrollView.useDelegate(
-                          itemExtent: 50,
-                          perspective: 0.005,
-                          diameterRatio: 1.2,
-                          physics: const FixedExtentScrollPhysics(),
-                          controller: FixedExtentScrollController(initialItem: selectedMinute),
-                          onSelectedItemChanged: (index) {
-                            setDialogState(() {
-                              selectedMinute = index;
-                            });
-                          },
-                          childDelegate: ListWheelChildBuilderDelegate(
-                            childCount: 60,
-                            builder: (context, index) {
-                              return Center(
-                                child: Text(
-                                  index.toString().padLeft(2, '0'),
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    color: selectedMinute == index
-                                        ? const Color(0xFF7AB8FF)
-                                        : (isDarkMode ? Colors.grey : Colors.grey[600]),
-                                    fontWeight: selectedMinute == index
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                  ),
-                                ),
-                              );
-                            },
+                      
+                      // MENIT - Hybrid Input
+                      Column(
+                        children: [
+                          // Input field untuk menit
+                          Container(
+                            width: 70,
+                            height: 45,
+                            decoration: BoxDecoration(
+                              color: isDarkMode ? const Color(0xFF1E2936) : Colors.grey[100],
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: const Color(0xFF7AB8FF),
+                                width: 2,
+                              ),
+                            ),
+                            child: TextField(
+                              controller: minuteController,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF7AB8FF),
+                              ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(2),
+                              ],
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                                isDense: true,
+                              ),
+                              onTap: () {
+                                // Select all text when tapped for easier editing
+                                minuteController.selection = TextSelection(
+                                  baseOffset: 0,
+                                  extentOffset: minuteController.text.length,
+                                );
+                              },
+                              onChanged: (value) {
+                                if (value.isEmpty) return;
+                                
+                                int? minute = int.tryParse(value);
+                                if (minute != null && minute >= 0 && minute < 60) {
+                                  setDialogState(() {
+                                    selectedMinute = minute;
+                                    // Format to 2 digits if length is 2
+                                    if (value.length == 2) {
+                                      minuteController.text = minute.toString().padLeft(2, '0');
+                                      minuteController.selection = TextSelection.fromPosition(
+                                        TextPosition(offset: minuteController.text.length),
+                                      );
+                                    }
+                                    minuteScrollController.jumpToItem(minute);
+                                  });
+                                } else if (minute != null && minute >= 60) {
+                                  // If input exceeds 59, reset to valid value
+                                  setDialogState(() {
+                                    minuteController.text = '59';
+                                    selectedMinute = 59;
+                                    minuteScrollController.jumpToItem(59);
+                                  });
+                                }
+                              },
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 10),
+                          // Scroll wheel untuk menit
+                          SizedBox(
+                            width: 80,
+                            height: 150,
+                            child: ListWheelScrollView.useDelegate(
+                              itemExtent: 40,
+                              perspective: 0.005,
+                              diameterRatio: 1.5,
+                              physics: const FixedExtentScrollPhysics(),
+                              controller: minuteScrollController,
+                              onSelectedItemChanged: (index) {
+                                setDialogState(() {
+                                  selectedMinute = index;
+                                  minuteController.text = index.toString().padLeft(2, '0');
+                                });
+                              },
+                              childDelegate: ListWheelChildBuilderDelegate(
+                                childCount: 60,
+                                builder: (context, index) {
+                                  return Center(
+                                    child: Text(
+                                      index.toString().padLeft(2, '0'),
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        color: selectedMinute == index
+                                            ? const Color(0xFF7AB8FF)
+                                            : (isDarkMode ? Colors.grey[600] : Colors.grey[500]),
+                                        fontWeight: selectedMinute == index
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -158,20 +332,64 @@ class _TambahKelasPageState extends State<TambahKelasPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+                  child: Text(
+                    'Batal',
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.grey : Colors.grey[700],
+                      fontSize: 16,
+                    ),
+                  ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      if (isStartTime) {
-                        _jamMulai = TimeOfDay(hour: selectedHour, minute: selectedMinute);
-                      } else {
-                        _jamSelesai = TimeOfDay(hour: selectedHour, minute: selectedMinute);
-                      }
-                    });
-                    Navigator.pop(context);
-                  },
-                  child: const Text('OK', style: TextStyle(color: Color(0xFF7AB8FF))),
+                ElevatedButton(
+onPressed: () {
+  final pickedTime = TimeOfDay(
+    hour: selectedHour,
+    minute: selectedMinute,
+  );
+
+  // Jika memilih jam selesai, pastikan > jam mulai
+  if (!isStartTime &&
+      !_isEndTimeAfterStart(_jamMulai, pickedTime)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Jam Selesai Tidak Valid'),
+        backgroundColor: Color(0xFFFF6B6B),
+      ),
+    );
+    return;
+  }
+
+  setState(() {
+    if (isStartTime) {
+      _jamMulai = pickedTime;
+
+      // Optional: auto adjust jam selesai
+      if (!_isEndTimeAfterStart(_jamMulai, _jamSelesai)) {
+        _jamSelesai = pickedTime;
+      }
+    } else {
+      _jamSelesai = pickedTime;
+    }
+  });
+
+  Navigator.pop(context);
+},
+
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF7AB8FF),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
             );
@@ -490,46 +708,77 @@ class _TambahKelasPageState extends State<TambahKelasPage> {
     );
   }
 
-  void _saveMataKuliah() {
-    if (_namaController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Mohon lengkapi nama mata kuliah'),
-          backgroundColor: Color(0xFFFF6B6B),
-        ),
-      );
-      return;
-    }
-
-    final mataKuliahId = DateTime.now().millisecondsSinceEpoch.toString();
-    final mataKuliah = MataKuliah(
-      id: mataKuliahId,
-      kode: '',
-      nama: _namaController.text,
-      ruangan: _ruanganController.text,
-      sks: 0,
-      dosen: _dosenController.text,
-      warna: _colorToHex(_selectedColor),
-    );
-
-    final jadwal = Jadwal(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      mataKuliahId: mataKuliahId,
-      hari: _selectedHari,
-      jamMulai: '${_jamMulai.hour.toString().padLeft(2, '0')}:${_jamMulai.minute.toString().padLeft(2, '0')}',
-      jamSelesai: '${_jamSelesai.hour.toString().padLeft(2, '0')}:${_jamSelesai.minute.toString().padLeft(2, '0')}',
-      ruangan: _ruanganController.text,
-    );
-
-    _mataKuliahController.addMataKuliah(mataKuliah);
-    _jadwalController.addJadwal(jadwal);
-
+void _saveMataKuliah() {
+  // 1. Validasi field text
+  if (_namaController.text.trim().isEmpty ||
+      _ruanganController.text.trim().isEmpty ||
+      _dosenController.text.trim().isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Kelas berhasil ditambahkan'),
-        backgroundColor: Color(0xFF4ECCA3),
+        content: Text('Mohon lengkapi semua field'),
+        backgroundColor: Color(0xFFFF6B6B),
       ),
     );
-    Navigator.pop(context);
+    return;
   }
+
+  // 2. Validasi jam belum dipilih
+  if (_isTimeEmpty(_jamMulai) || _isTimeEmpty(_jamSelesai)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Jam mulai dan jam selesai wajib diisi'),
+        backgroundColor: Color(0xFFFF6B6B),
+      ),
+    );
+    return;
+  }
+
+  // 3. Validasi jam selesai harus > jam mulai
+  if (!_isEndTimeAfterStart(_jamMulai, _jamSelesai)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Jam selesai harus lebih besar dari jam mulai'),
+        backgroundColor: Color(0xFFFF6B6B),
+      ),
+    );
+    return;
+  }
+
+  // 4. Simpan Mata Kuliah
+  final mataKuliahId = DateTime.now().millisecondsSinceEpoch.toString();
+  final mataKuliah = MataKuliah(
+    id: mataKuliahId,
+    kode: '',
+    nama: _namaController.text,
+    ruangan: _ruanganController.text,
+    sks: 0,
+    dosen: _dosenController.text,
+    warna: _colorToHex(_selectedColor),
+  );
+
+  // 5. Simpan Jadwal
+  final jadwal = Jadwal(
+    id: DateTime.now().millisecondsSinceEpoch.toString(),
+    mataKuliahId: mataKuliahId,
+    hari: _selectedHari,
+    jamMulai:
+        '${_jamMulai.hour.toString().padLeft(2, '0')}:${_jamMulai.minute.toString().padLeft(2, '0')}',
+    jamSelesai:
+        '${_jamSelesai.hour.toString().padLeft(2, '0')}:${_jamSelesai.minute.toString().padLeft(2, '0')}',
+    ruangan: _ruanganController.text,
+  );
+
+  _mataKuliahController.addMataKuliah(mataKuliah);
+  _jadwalController.addJadwal(jadwal);
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('Kelas berhasil ditambahkan'),
+      backgroundColor: Color(0xFF4ECCA3),
+    ),
+  );
+
+  Navigator.pop(context);
+}
+
 }
