@@ -1,6 +1,6 @@
 // views/tambah_tugas_page.dart
 // ========================================
-// TAMBAH TUGAS PAGE - DENGAN DATETIME PICKER
+// TAMBAH TUGAS PAGE - DENGAN NOTIFIKASI OTOMATIS
 // ========================================
 
 import 'package:flutter/material.dart';
@@ -25,6 +25,7 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
   MataKuliah? _selectedMataKuliah;
   bool _isPrioritas = false;
   DateTime _selectedDateTime = DateTime.now();
+  bool _isSaving = false;
 
   @override
   void dispose() {
@@ -313,12 +314,45 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
                 ),
               ),
             ),
+            const SizedBox(height: 20),
+            // Info notifikasi otomatis
+            Container(
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: const Color(0xFF7AB8FF).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: const Color(0xFF7AB8FF).withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.notifications_active,
+                    color: const Color(0xFF7AB8FF),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Notifikasi otomatis akan dijadwalkan:\n• 1 hari sebelum\n• 5 jam sebelum\n• 1 jam sebelum\n• 30 menit sebelum deadline',
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white70 : Colors.black87,
+                        fontSize: 12,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 40),
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: _isSaving ? null : () => Navigator.pop(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFF6B6B),
                       padding: const EdgeInsets.symmetric(vertical: 18),
@@ -339,7 +373,7 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
                 const SizedBox(width: 15),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _saveTugas,
+                    onPressed: _isSaving ? null : _saveTugas,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF7AB8FF),
                       padding: const EdgeInsets.symmetric(vertical: 18),
@@ -347,14 +381,23 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: const Text(
-                      'Simpan',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: _isSaving
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Simpan',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
               ],
@@ -365,7 +408,7 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
     );
   }
 
-  void _saveTugas() {
+  void _saveTugas() async {
     if (_judulController.text.isEmpty || _selectedMataKuliah == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -376,28 +419,53 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
       return;
     }
 
-    final tugas = Tugas(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      judul: _judulController.text,
-      mataKuliahId: _selectedMataKuliah!.id,
-      mataKuliahNama: _selectedMataKuliah!.nama,
-      keterangan: _keteranganController.text,
-      isPrioritas: _isPrioritas,
-      tanggal: _selectedDateTime,
-      setiapHari: false,
-      hariSebelumKelas: 0,
-      checklist: ['Checklist title 1', 'Checklist title 2', 'Checklist title 3'],
-      checklistStatus: [true, true, false],
-    );
+    setState(() {
+      _isSaving = true;
+    });
 
-    _tugasController.addTugas(tugas);
+    try {
+      final tugas = Tugas(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        judul: _judulController.text,
+        mataKuliahId: _selectedMataKuliah!.id,
+        mataKuliahNama: _selectedMataKuliah!.nama,
+        keterangan: _keteranganController.text,
+        isPrioritas: _isPrioritas,
+        tanggal: _selectedDateTime,
+        setiapHari: false,
+        hariSebelumKelas: 0,
+        checklist: ['Checklist title 1', 'Checklist title 2', 'Checklist title 3'],
+        checklistStatus: [true, true, false],
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Tugas berhasil ditambahkan'),
-        backgroundColor: Color(0xFF4ECCA3),
-      ),
-    );
-    Navigator.pop(context);
+      // Simpan tugas dan schedule notifikasi otomatis
+      await _tugasController.addTugas(tugas);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Tugas berhasil ditambahkan dengan notifikasi!'),
+            backgroundColor: Color(0xFF4ECCA3),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Color(0xFFFF6B6B),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
   }
 }

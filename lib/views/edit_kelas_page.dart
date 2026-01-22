@@ -5,6 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../services/schedule_manager.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../controllers/mata_kuliah_controller.dart';
 import '../controllers/jadwal_controller.dart';
@@ -810,65 +811,67 @@ class _EditKelasPageState extends State<EditKelasPage> {
     );
   }
 
-  void _updateKelas() {
-    if (_namaController.text.trim().isEmpty ||
-        _ruanganController.text.trim().isEmpty ||
-        _dosenController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Mohon lengkapi semua field'),
-          backgroundColor: Color(0xFFFF6B6B),
-        ),
-      );
-      return;
-    }
-
-    if (_isTimeEmpty(_jamMulai) || _isTimeEmpty(_jamSelesai)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Jam mulai dan jam selesai wajib diisi'),
-          backgroundColor: Color(0xFFFF6B6B),
-        ),
-      );
-      return;
-    }
-
-    if (!_isEndTimeAfterStart(_jamMulai, _jamSelesai)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Jam selesai harus lebih besar dari jam mulai'),
-          backgroundColor: Color(0xFFFF6B6B),
-        ),
-      );
-      return;
-    }
-
-    if (_mataKuliah != null) {
-      _mataKuliah!
-        ..nama = _namaController.text
-        ..dosen = _dosenController.text
-        ..warna = _colorToHex(_selectedColor);
-
-      _mataKuliahController.updateMataKuliah(_mataKuliah!);
-    }
-
-    _jadwal!
-      ..hari = _selectedHari
-      ..jamMulai =
-          '${_jamMulai.hour.toString().padLeft(2, '0')}:${_jamMulai.minute.toString().padLeft(2, '0')}'
-      ..jamSelesai =
-          '${_jamSelesai.hour.toString().padLeft(2, '0')}:${_jamSelesai.minute.toString().padLeft(2, '0')}'
-      ..ruangan = _ruanganController.text;
-
-    _jadwalController.updateJadwal(_jadwal!);
-
+void _updateKelas() async {
+  if (_namaController.text.trim().isEmpty ||
+      _ruanganController.text.trim().isEmpty ||
+      _dosenController.text.trim().isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Kelas berhasil diupdate'),
-        backgroundColor: Color(0xFF4ECCA3),
+        content: Text('Mohon lengkapi semua field'),
+        backgroundColor: Color(0xFFFF6B6B),
       ),
     );
-
-    Navigator.pop(context, true);
+    return;
   }
+
+  if (_isTimeEmpty(_jamMulai) || _isTimeEmpty(_jamSelesai)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Jam mulai dan jam selesai wajib diisi'),
+        backgroundColor: Color(0xFFFF6B6B),
+      ),
+    );
+    return;
+  }
+
+  if (!_isEndTimeAfterStart(_jamMulai, _jamSelesai)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Jam selesai harus lebih besar dari jam mulai'),
+        backgroundColor: Color(0xFFFF6B6B),
+      ),
+    );
+    return;
+  }
+
+  if (_mataKuliah != null) {
+    _mataKuliah!
+      ..nama = _namaController.text
+      ..dosen = _dosenController.text
+      ..warna = _colorToHex(_selectedColor);
+
+    _mataKuliahController.updateMataKuliah(_mataKuliah!);
+  }
+
+  _jadwal!
+    ..hari = _selectedHari
+    ..jamMulai =
+        '${_jamMulai.hour.toString().padLeft(2, '0')}:${_jamMulai.minute.toString().padLeft(2, '0')}'
+    ..jamSelesai =
+        '${_jamSelesai.hour.toString().padLeft(2, '0')}:${_jamSelesai.minute.toString().padLeft(2, '0')}'
+    ..ruangan = _ruanganController.text;
+
+  _jadwalController.updateJadwal(_jadwal!);
+
+  await ScheduleManager().updateSchedule(_jadwal!.id);
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('Kelas berhasil diupdate'),
+      backgroundColor: Color(0xFF4ECCA3),
+    ),
+  );
+
+  Navigator.pop(context, true);
+}
   }

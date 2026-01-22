@@ -11,6 +11,15 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+     # Notifikasi Lokal
+  flutter_local_notifications: ^17.2.3
+  
+  # Timezone untuk penjadwalan
+  timezone: ^0.9.4
+  
+  # Permission handler untuk Android 13+
+  permission_handler: ^11.3.1
+  
   
   # State Management & Storage
   hive: ^2.2.3

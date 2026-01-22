@@ -1,6 +1,6 @@
 // views/edit_tugas_page.dart
 // ========================================
-// EDIT TUGAS PAGE - DENGAN DATETIME PICKER
+// EDIT TUGAS PAGE - DENGAN UPDATE/CANCEL NOTIFIKASI
 // ========================================
 
 import 'package:flutter/material.dart';
@@ -27,6 +27,7 @@ class _EditTugasPageState extends State<EditTugasPage> {
   late MataKuliah? _selectedMataKuliah;
   late bool _isPrioritas;
   late DateTime _selectedDateTime;
+  bool _isUpdating = false;
 
   @override
   void initState() {
@@ -323,12 +324,45 @@ class _EditTugasPageState extends State<EditTugasPage> {
                 ),
               ),
             ),
+            const SizedBox(height: 20),
+            // Info notifikasi otomatis
+            Container(
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: const Color(0xFF7AB8FF).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: const Color(0xFF7AB8FF).withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.notifications_active,
+                    color: const Color(0xFF7AB8FF),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Notifikasi akan diperbarui otomatis:\n• 1 hari sebelum\n• 5 jam sebelum\n• 1 jam sebelum\n• 30 menit sebelum deadline',
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white70 : Colors.black87,
+                        fontSize: 12,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 40),
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: _isUpdating ? null : () => Navigator.pop(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFF6B6B),
                       padding: const EdgeInsets.symmetric(vertical: 18),
@@ -349,7 +383,7 @@ class _EditTugasPageState extends State<EditTugasPage> {
                 const SizedBox(width: 15),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _updateTugas,
+                    onPressed: _isUpdating ? null : _updateTugas,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF7AB8FF),
                       padding: const EdgeInsets.symmetric(vertical: 18),
@@ -357,14 +391,23 @@ class _EditTugasPageState extends State<EditTugasPage> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: const Text(
-                      'Update',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: _isUpdating
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Update',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
               ],
@@ -375,7 +418,7 @@ class _EditTugasPageState extends State<EditTugasPage> {
     );
   }
 
-  void _updateTugas() {
+  void _updateTugas() async {
     if (_judulController.text.isEmpty || _selectedMataKuliah == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -386,25 +429,50 @@ class _EditTugasPageState extends State<EditTugasPage> {
       return;
     }
 
-    widget.tugas.judul = _judulController.text;
-    widget.tugas.mataKuliahId = _selectedMataKuliah!.id;
-    widget.tugas.mataKuliahNama = _selectedMataKuliah!.nama;
-    widget.tugas.keterangan = _keteranganController.text;
-    widget.tugas.isPrioritas = _isPrioritas;
-    widget.tugas.tanggal = _selectedDateTime;
+    setState(() {
+      _isUpdating = true;
+    });
 
-    _tugasController.updateTugas(widget.tugas);
+    try {
+      widget.tugas.judul = _judulController.text;
+      widget.tugas.mataKuliahId = _selectedMataKuliah!.id;
+      widget.tugas.mataKuliahNama = _selectedMataKuliah!.nama;
+      widget.tugas.keterangan = _keteranganController.text;
+      widget.tugas.isPrioritas = _isPrioritas;
+      widget.tugas.tanggal = _selectedDateTime;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Tugas berhasil diupdate'),
-        backgroundColor: Color(0xFF4ECCA3),
-      ),
-    );
-    Navigator.pop(context);
+      // Update tugas dan reschedule notifikasi otomatis
+      await _tugasController.updateTugas(widget.tugas);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Tugas berhasil diupdate dengan notifikasi!'),
+            backgroundColor: Color(0xFF4ECCA3),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Color(0xFFFF6B6B),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUpdating = false;
+        });
+      }
+    }
   }
 
-  void _deleteTugas() {
+  void _deleteTugas() async {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     showDialog(
@@ -418,7 +486,7 @@ class _EditTugasPageState extends State<EditTugasPage> {
           ),
         ),
         content: Text(
-          'Apakah Anda yakin ingin menghapus tugas ini?',
+          'Apakah Anda yakin ingin menghapus tugas ini? Notifikasi juga akan dihapus.',
           style: TextStyle(
             color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
           ),
@@ -429,16 +497,21 @@ class _EditTugasPageState extends State<EditTugasPage> {
             child: const Text('Batal'),
           ),
           TextButton(
-            onPressed: () {
-              _tugasController.deleteTugas(widget.tugas.id);
-              Navigator.pop(context);
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Tugas berhasil dihapus'),
-                  backgroundColor: Color(0xFFFF6B6B),
-                ),
-              );
+            onPressed: () async {
+              // Hapus tugas dan cancel notifikasi otomatis
+              await _tugasController.deleteTugas(widget.tugas.id);
+              
+              if (mounted) {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Close edit page
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('🗑️ Tugas dan notifikasi berhasil dihapus'),
+                    backgroundColor: Color(0xFFFF6B6B),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
             },
             child: const Text(
               'Hapus',
