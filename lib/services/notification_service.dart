@@ -1,9 +1,10 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
-import 'dart:io';
+import 'dart:io' show Platform;
 import 'package:hive/hive.dart';
 import '../models/jadwal.dart';
 import '../models/mata_kuliah.dart';
@@ -20,6 +21,13 @@ class ClassNotificationService {
 
   Future<void> initialize() async {
     if (_initialized) return;
+
+    // Skip initialization untuk web
+    if (kIsWeb) {
+      print('⚠️ Notifications tidak didukung di web browser');
+      _initialized = true;
+      return;
+    }
 
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
@@ -50,6 +58,8 @@ class ClassNotificationService {
   }
 
   Future<bool> _requestPermissions() async {
+    if (kIsWeb) return false;
+    
     if (Platform.isAndroid) {
       final notificationStatus = await Permission.notification.request();
       final alarmStatus = await Permission.scheduleExactAlarm.request();
@@ -64,6 +74,12 @@ class ClassNotificationService {
 
   Future<void> scheduleAllNotificationsForClass(String jadwalId) async {
     if (!_initialized) await initialize();
+
+    // Skip untuk web
+    if (kIsWeb) {
+      print('⚠️ Notifications tidak tersedia di web');
+      return;
+    }
 
     try {
       final jadwalBox = Hive.box<Jadwal>('jadwalBox');
@@ -229,6 +245,8 @@ class ClassNotificationService {
   }
 
   Future<void> cancelNotificationsForClass(String classId) async {
+    if (kIsWeb) return;
+    
     for (int i = 0; i < 5; i++) {
       final notificationId = _generateNotificationId(classId, i);
       await _flutterLocalNotificationsPlugin.cancel(notificationId);
@@ -237,16 +255,25 @@ class ClassNotificationService {
   }
 
   Future<void> cancelAllNotifications() async {
+    if (kIsWeb) return;
+    
     await _flutterLocalNotificationsPlugin.cancelAll();
     print('🗑️ Semua notifikasi dibatalkan');
   }
 
   Future<List<PendingNotificationRequest>> getPendingNotifications() async {
+    if (kIsWeb) return [];
+    
     return await _flutterLocalNotificationsPlugin.pendingNotificationRequests();
   }
 
   Future<void> showTestNotification() async {
     if (!_initialized) await initialize();
+
+    if (kIsWeb) {
+      print('⚠️ Test notification tidak tersedia di web');
+      return;
+    }
 
     await _flutterLocalNotificationsPlugin.show(
       999999,
@@ -257,6 +284,8 @@ class ClassNotificationService {
   }
 
   Future<bool> checkPermissions() async {
+    if (kIsWeb) return false;
+    
     if (Platform.isAndroid) {
       final notificationStatus = await Permission.notification.status;
       final alarmStatus = await Permission.scheduleExactAlarm.status;
@@ -264,4 +293,7 @@ class ClassNotificationService {
     }
     return true;
   }
+  
+  // Helper method untuk cek apakah notifikasi tersedia
+  bool get isSupported => !kIsWeb;
 }

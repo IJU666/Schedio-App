@@ -1,17 +1,18 @@
 // views/daftar_tugas_page.dart
 // ========================================
-// DAFTAR TUGAS PAGE - DENGAN NAVIGASI EDIT_Tugas
+// DAFTAR TUGAS PAGE - DENGAN PERINGATAN TELAT
 // ========================================
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:async';
 import '../controllers/tugas_controller.dart';
 import '../controllers/mata_kuliah_controller.dart';
 import '../controllers/navigation_controller.dart';
 import '../models/tugas.dart';
 import '../widgets/modern_bottom_navbar.dart';
 import 'tambah_kelas_page.dart';
-import 'edit_tugas_page.dart'; // IMPORT EDIT TUGAS PAGE
+import 'edit_tugas_page.dart';
 
 class DaftarTugasPage extends StatefulWidget {
   const DaftarTugasPage({Key? key}) : super(key: key);
@@ -27,16 +28,29 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
   final NavigationController _navigationController = NavigationController();
   TabController? _tabController;
   int _selectedTab = 0;
+  Timer? _deletionTimer;
+  final Map<String, Timer> _pendingDeletions = {};
+  Timer? _blinkTimer;
+  bool _showWarning = true;
 
   @override
   void initState() {
     super.initState();
-    _navigationController.setIndex(3); // Assignments page
+    _navigationController.setIndex(3);
     _tabController = TabController(length: 3, vsync: this);
     _tabController!.addListener(() {
       setState(() {
         _selectedTab = _tabController!.index;
       });
+    });
+    
+    // Timer untuk animasi berkedip peringatan
+    _blinkTimer = Timer.periodic(const Duration(milliseconds: 800), (timer) {
+      if (mounted) {
+        setState(() {
+          _showWarning = !_showWarning;
+        });
+      }
     });
   }
 
@@ -44,6 +58,11 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
   void dispose() {
     _tabController?.dispose();
     _navigationController.dispose();
+    _deletionTimer?.cancel();
+    _blinkTimer?.cancel();
+    for (var timer in _pendingDeletions.values) {
+      timer.cancel();
+    }
     super.dispose();
   }
 
@@ -53,6 +72,11 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
     if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
     buffer.write(hexString.replaceFirst('#', ''));
     return Color(int.parse(buffer.toString(), radix: 16));
+  }
+
+  bool _isLate(Tugas tugas) {
+    final now = DateTime.now();
+    return now.isAfter(tugas.tanggal) && !tugas.checklistStatus.every((s) => s);
   }
 
   Map<String, List<Tugas>> _groupTugasByDate(List<Tugas> tugasList) {
@@ -81,17 +105,29 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
   List<Tugas> _getFilteredTugas() {
     final allTugas = _tugasController.getAllTugas();
     switch (_selectedTab) {
-      case 0: // Tenggat
+      case 0:
         allTugas.sort((a, b) => a.tanggal.compareTo(b.tanggal));
         return allTugas;
-      case 1: // Kelas
+      case 1:
         allTugas.sort((a, b) => a.mataKuliahNama.compareTo(b.mataKuliahNama));
         return allTugas;
-      case 2: // Prioritas
+      case 2:
         return allTugas.where((t) => t.isPrioritas).toList();
       default:
         return allTugas;
     }
+  }
+
+  void _scheduleTaskDeletion(String tugasId) {
+    _pendingDeletions[tugasId]?.cancel();
+    
+    _pendingDeletions[tugasId] = Timer(const Duration(minutes: 5), () {
+      _tugasController.deleteTugas(tugasId);
+      _pendingDeletions.remove(tugasId);
+      if (mounted) {
+        setState(() {});
+      }
+    });
   }
 
   @override
@@ -211,7 +247,6 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
     }
 
     if (_selectedTab == 0) {
-      // Group by date for Tenggat tab
       final grouped = _groupTugasByDate(tugasList);
       return ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
@@ -240,7 +275,6 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
         },
       );
     } else {
-      // Simple list for other tabs
       return ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
         itemCount: tugasList.length,
@@ -258,25 +292,35 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
       borderColor = _hexToColor(mataKuliah.warna);
     }
 
+    final isLate = _isLate(tugas);
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: cardColor,
+        color: isLate 
+            ? (isDarkMode ? const Color(0xFF3D1F1F) : const Color(0xFFFFEBEE))
+            : cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: borderColor.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(
+          color: isLate ? const Color(0xFFFF6B6B) : borderColor, 
+          width: isLate ? 3 : 2,
+        ),
+
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Header dengan badge TELAT
+          if (isLate)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+              ),
+            ),
+          
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -285,13 +329,14 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
                   child: Text(
                     tugas.mataKuliahNama,
                     style: TextStyle(
-                      color: borderColor,
+                      color: (isDarkMode 
+                                ? const Color.fromARGB(255, 255, 255, 255)
+                                : (isLate ? const Color.fromARGB(255, 0, 0, 0)! : const Color.fromARGB(255, 0, 0, 0)!)),
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                // TAMBAHKAN GESTURE DETECTOR UNTUK NAVIGASI KE EDIT PAGE
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -300,7 +345,6 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
                         builder: (context) => EditTugasPage(tugas: tugas),
                       ),
                     ).then((_) {
-                      // Refresh state setelah kembali dari edit
                       setState(() {});
                     });
                   },
@@ -308,15 +352,15 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
                     padding: const EdgeInsets.all(4),
                     child: Icon(
                       Icons.edit,
-                      color: borderColor,
-                      size: 20,
+                      color: (isDarkMode 
+                                ? const Color.fromARGB(255, 177, 177, 177)
+                                : (isLate ? const Color.fromARGB(255, 0, 0, 0)! : const Color.fromARGB(255, 0, 0, 0)!))
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          // Main Task Title
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
@@ -332,6 +376,28 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
                           !allChecked,
                         );
                       }
+                      
+                      if (!allChecked) {
+                        _scheduleTaskDeletion(tugas.id);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Tugas akan dihapus dalam 5 menit'),
+                            duration: const Duration(seconds: 3),
+                            backgroundColor: borderColor,
+                            action: SnackBarAction(
+                              label: 'BATAL',
+                              textColor: Colors.white,
+                              onPressed: () {
+                                _pendingDeletions[tugas.id]?.cancel();
+                                _pendingDeletions.remove(tugas.id);
+                              },
+                            ),
+                          ),
+                        );
+                      } else {
+                        _pendingDeletions[tugas.id]?.cancel();
+                        _pendingDeletions.remove(tugas.id);
+                      }
                     });
                   },
                   child: Container(
@@ -344,13 +410,15 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
                       border: Border.all(
                         color: tugas.checklistStatus.every((s) => s)
                             ? const Color(0xFFFFB84D)
-                            : (isDarkMode ? Colors.grey[600]! : Colors.grey[400]!),
+                            : (isDarkMode
+                                ? const Color.fromARGB(255, 255, 255, 255)
+                                : (isLate ? const Color.fromARGB(255, 0, 0, 0)! : const Color.fromARGB(255, 255, 255, 255)!)),
                         width: 2,
                       ),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: tugas.checklistStatus.every((s) => s)
-                        ? const Icon(Icons.check, color: Colors.white, size: 14)
+                        ? const Icon(Icons.check, color: Color.fromARGB(255, 255, 255, 255), size: 14)
                         : null,
                   ),
                 ),
@@ -363,23 +431,29 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
                         tugas.judul,
                         style: TextStyle(
                           color: tugas.checklistStatus.every((s) => s)
-                              ? (isDarkMode ? Colors.grey[600] : Colors.grey[500])
-                              : textColor,
+                              ? (isLate? const Color.fromARGB(255, 255, 255, 255) : const Color.fromARGB(255, 0, 0, 0))
+                              : (isDarkMode ? const Color.fromARGB(255, 255, 255, 255) : textColor),
                           fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: isLate ? FontWeight.w600 : FontWeight.w500,
                           decoration: tugas.checklistStatus.every((s) => s)
                               ? TextDecoration.lineThrough
                               : null,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Note from checklist',
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.grey[600] : Colors.grey[500],
-                          fontSize: 12,
+                      if (isLate)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            'Melewati tenggat ${_getTimeDifference(tugas.tanggal)}',
+                            style: TextStyle(
+                              color: (isDarkMode 
+                                ? const Color.fromARGB(255, 255, 255, 255)
+                                : (isLate ? const Color.fromARGB(255, 0, 0, 0)! : const Color.fromARGB(255, 0, 0, 0)!)),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -387,7 +461,6 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
             ),
           ),
           const SizedBox(height: 8),
-          // Deadline Info
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -395,15 +468,19 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
                 Icon(
                   Icons.access_time,
                   size: 16,
-                  color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                  color: isDarkMode 
+                      ? const Color.fromARGB(255, 255, 255, 255)
+                      : (isLate ? const Color.fromARGB(255, 0, 0, 0) : const Color.fromARGB(255, 0, 0, 0)),
                 ),
                 const SizedBox(width: 6),
                 Text(
                   'Tenggat: ${DateFormat('HH:mm').format(tugas.tanggal)}',
                   style: TextStyle(
-                    color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                    color: isDarkMode 
+                        ? const Color.fromARGB(255, 255, 255, 255)
+                        : (isLate ? const Color.fromARGB(255, 0, 0, 0) : const Color.fromARGB(255, 0, 0, 0)),
                     fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: isLate ? FontWeight.w600 : FontWeight.w500,
                   ),
                 ),
               ],
@@ -413,5 +490,20 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
         ],
       ),
     );
+  }
+
+  String _getTimeDifference(DateTime deadline) {
+    final now = DateTime.now();
+    final difference = now.difference(deadline);
+    
+    if (difference.inDays > 0) {
+      return '${difference.inDays} hari yang lalu';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} jam yang lalu';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} menit yang lalu';
+    } else {
+      return 'baru saja';
+    }
   }
 }
