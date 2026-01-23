@@ -58,11 +58,34 @@ class ClassNotificationService {
       onDidReceiveNotificationResponse: _onNotificationTap,
     );
 
+    // PENTING: Buat notification channel untuk Android dengan vibration dan sound
     if (Platform.isAndroid) {
+      await _createNotificationChannel();
       await _requestPermissions();
     }
 
     _initialized = true;
+  }
+
+  /// Membuat notification channel dengan vibration dan sound
+  Future<void> _createNotificationChannel() async {
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'class_reminder_channel', // ID channel
+      'Pengingat Jadwal Kelas', // Nama channel
+      description: 'Notifikasi pengingat jadwal kelas kuliah',
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+      enableLights: true,
+      ledColor: Color(0xFF7AB8FF),
+      showBadge: true,
+    );
+
+    await _flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+    
+    print('✅ Notification channel created with vibration and sound');
   }
 
   Future<bool> _requestPermissions() async {
@@ -233,27 +256,44 @@ class ClassNotificationService {
   }
 
   NotificationDetails _notificationDetails() {
-    const androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'class_reminder_channel',
       'Pengingat Jadwal Kelas',
       channelDescription: 'Notifikasi pengingat jadwal kelas kuliah',
       importance: Importance.high,
       priority: Priority.high,
       showWhen: true,
+      // VIBRASI AKTIF
       enableVibration: true,
+      // SUARA AKTIF
       playSound: true,
+      // PENGATURAN TAMBAHAN
+      enableLights: true,
+      ledColor: const Color(0xFF7AB8FF),
+      ledOnMs: 1000,
+      ledOffMs: 500,
       icon: '@drawable/app_icon',
-      color: Color(0xFF7AB8FF),
-      styleInformation: BigTextStyleInformation(''),
+      color: const Color(0xFF7AB8FF),
+      styleInformation: const BigTextStyleInformation(''),
+      showProgress: false,
+      maxProgress: 0,
+      onlyAlertOnce: false, // Pastikan vibrasi dan suara muncul setiap kali
+      autoCancel: true,
+      ongoing: false,
+      ticker: 'Pengingat Kelas',
+      channelShowBadge: true,
+      // FULL SCREEN INTENT untuk notifikasi penting (opsional)
+      fullScreenIntent: false,
     );
 
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
+      sound: 'default', // iOS menggunakan default sound
     );
 
-    return const NotificationDetails(
+    return NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
