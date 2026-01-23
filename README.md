@@ -9,7 +9,7 @@
 
 ---
 
-[Features](#features) • [Getting Started](#getting-started) • [Installation](#installation) • [Team](#team) • [Documentation](#documentation)
+[Features](#features) • [Getting Started](#getting-started) • [Installation](#installation) • [Team](#team) • [Documentation](#documentation) • [Download](https://drive.google.com/drive/folders/1fsYk8o6OCwG6GeP1Ym_s6Tnv8lfZYChU?usp=sharing)
 
 </div>
 
