@@ -1,6 +1,6 @@
 // views/daftar_tugas_page.dart
 // ========================================
-// DAFTAR TUGAS PAGE - DENGAN PERINGATAN TELAT
+// DAFTAR TUGAS PAGE - DENGAN DROPDOWN
 // ========================================
 
 import 'package:flutter/material.dart';
@@ -30,8 +30,6 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
   int _selectedTab = 0;
   Timer? _deletionTimer;
   final Map<String, Timer> _pendingDeletions = {};
-  Timer? _blinkTimer;
-  bool _showWarning = true;
 
   @override
   void initState() {
@@ -43,15 +41,6 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
         _selectedTab = _tabController!.index;
       });
     });
-    
-    // Timer untuk animasi berkedip peringatan
-    _blinkTimer = Timer.periodic(const Duration(milliseconds: 800), (timer) {
-      if (mounted) {
-        setState(() {
-          _showWarning = !_showWarning;
-        });
-      }
-    });
   }
 
   @override
@@ -59,7 +48,6 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
     _tabController?.dispose();
     _navigationController.dispose();
     _deletionTimer?.cancel();
-    _blinkTimer?.cancel();
     for (var timer in _pendingDeletions.values) {
       timer.cancel();
     }
@@ -212,6 +200,7 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
           fontSize: 14,
           fontWeight: FontWeight.w600,
         ),
+        dividerColor: Colors.transparent,
         tabs: const [
           Tab(text: 'Tenggat'),
           Tab(text: 'Kelas'),
@@ -285,6 +274,7 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
     }
   }
 
+  // UPDATED: Card dengan Dropdown
   Widget _buildTugasCard(Tugas tugas, bool isDarkMode, Color cardColor, Color textColor) {
     final mataKuliah = _mataKuliahController.getMataKuliahById(tugas.mataKuliahId);
     Color borderColor = const Color(0xFF7AB8FF);
@@ -293,202 +283,330 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
     }
 
     final isLate = _isLate(tugas);
+    bool isExpanded = false;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isLate 
-            ? (isDarkMode ? const Color(0xFF3D1F1F) : const Color(0xFFFFEBEE))
-            : cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isLate ? const Color(0xFFFF6B6B) : borderColor, 
-          width: isLate ? 3 : 2,
-        ),
-
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header dengan badge TELAT
-          if (isLate)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+    return StatefulBuilder(
+      builder: (context, setCardState) {
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isLate ? const Color(0xFFFF6B6B) : borderColor,
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: (isLate ? const Color(0xFFFF6B6B) : borderColor).withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
-            ),
-          
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    tugas.mataKuliahNama,
-                    style: TextStyle(
-                      color: (isDarkMode 
-                                ? const Color.fromARGB(255, 255, 255, 255)
-                                : (isLate ? const Color.fromARGB(255, 0, 0, 0)! : const Color.fromARGB(255, 0, 0, 0)!)),
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EditTugasPage(tugas: tugas),
-                      ),
-                    ).then((_) {
-                      setState(() {});
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.edit,
-                      color: (isDarkMode 
-                                ? const Color.fromARGB(255, 177, 177, 177)
-                                : (isLate ? const Color.fromARGB(255, 0, 0, 0)! : const Color.fromARGB(255, 0, 0, 0)!))
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      final allChecked = tugas.checklistStatus.every((status) => status);
-                      for (int i = 0; i < tugas.checklistStatus.length; i++) {
-                        _tugasController.updateChecklistStatus(
-                          tugas.id,
-                          i,
-                          !allChecked,
-                        );
-                      }
-                      
-                      if (!allChecked) {
-                        _scheduleTaskDeletion(tugas.id);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Tugas akan dihapus dalam 5 menit'),
-                            duration: const Duration(seconds: 3),
-                            backgroundColor: borderColor,
-                            action: SnackBarAction(
-                              label: 'BATAL',
-                              textColor: Colors.white,
-                              onPressed: () {
-                                _pendingDeletions[tugas.id]?.cancel();
-                                _pendingDeletions.remove(tugas.id);
-                              },
-                            ),
-                          ),
-                        );
-                      } else {
-                        _pendingDeletions[tugas.id]?.cancel();
-                        _pendingDeletions.remove(tugas.id);
-                      }
-                    });
-                  },
-                  child: Container(
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: tugas.checklistStatus.every((s) => s)
-                          ? const Color(0xFFFFB84D)
-                          : Colors.transparent,
-                      border: Border.all(
-                        color: tugas.checklistStatus.every((s) => s)
-                            ? const Color(0xFFFFB84D)
-                            : (isDarkMode
-                                ? const Color.fromARGB(255, 255, 255, 255)
-                                : (isLate ? const Color.fromARGB(255, 0, 0, 0)! : const Color.fromARGB(255, 255, 255, 255)!)),
-                        width: 2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // HEADER SECTION - Clickable
+              InkWell(
+                onTap: () {
+                  setCardState(() {
+                    isExpanded = !isExpanded;
+                  });
+                },
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      // Chevron Icon
+                      Icon(
+                        isExpanded ? Icons.keyboard_arrow_down : Icons.chevron_right,
+                        color: textColor,
+                        size: 24,
                       ),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: tugas.checklistStatus.every((s) => s)
-                        ? const Icon(Icons.check, color: Color.fromARGB(255, 255, 255, 255), size: 14)
-                        : null,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            if (isLate)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFF6B6B),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    'TELAT',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            Expanded(
+                              child: Text(
+                                tugas.mataKuliahNama,
+                                style: TextStyle(
+                                  color: isLate ? const Color(0xFFFF6B6B) : borderColor,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Edit Button
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EditTugasPage(tugas: tugas),
+                            ),
+                          ).then((_) {
+                            setState(() {});
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          child: Icon(
+                            Icons.edit,
+                            color: isLate ? const Color(0xFFFF6B6B) : borderColor,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
+              ),
+              
+              // CHECKLIST SECTION
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          final allChecked = tugas.checklistStatus.every((status) => status);
+                          for (int i = 0; i < tugas.checklistStatus.length; i++) {
+                            _tugasController.updateChecklistStatus(
+                              tugas.id,
+                              i,
+                              !allChecked,
+                            );
+                          }
+                          
+                          if (!allChecked) {
+                            _scheduleTaskDeletion(tugas.id);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text('Tugas akan dihapus dalam 5 menit'),
+                                duration: const Duration(seconds: 3),
+                                backgroundColor: borderColor,
+                                action: SnackBarAction(
+                                  label: 'BATAL',
+                                  textColor: Colors.white,
+                                  onPressed: () {
+                                    setState(() {
+                                      for (int i = 0; i < tugas.checklistStatus.length; i++) {
+                                        _tugasController.updateChecklistStatus(
+                                          tugas.id,
+                                          i,
+                                          false,
+                                        );
+                                      }
+                                    });
+                                    _pendingDeletions[tugas.id]?.cancel();
+                                    _pendingDeletions.remove(tugas.id);
+                                  },
+                                ),
+                              ),
+                            );
+                          } else {
+                            _pendingDeletions[tugas.id]?.cancel();
+                            _pendingDeletions.remove(tugas.id);
+                          }
+                        });
+                      },
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: tugas.checklistStatus.every((s) => s)
+                              ? const Color(0xFFFFB84D)
+                              : Colors.transparent,
+                          border: Border.all(
+                            color: tugas.checklistStatus.every((s) => s)
+                                ? const Color(0xFFFFB84D)
+                                : (isLate 
+                                    ? const Color(0xFFFF6B6B)
+                                    : (isDarkMode ? Colors.grey[600]! : Colors.grey[400]!)),
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: tugas.checklistStatus.every((s) => s)
+                            ? const Icon(Icons.check, color: Colors.white, size: 14)
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
                         tugas.judul,
                         style: TextStyle(
                           color: tugas.checklistStatus.every((s) => s)
-                              ? (isLate? const Color.fromARGB(255, 255, 255, 255) : const Color.fromARGB(255, 0, 0, 0))
-                              : (isDarkMode ? const Color.fromARGB(255, 255, 255, 255) : textColor),
+                              ? (isDarkMode ? Colors.grey[600] : Colors.grey[500])
+                              : textColor,
                           fontSize: 14,
-                          fontWeight: isLate ? FontWeight.w600 : FontWeight.w500,
+                          fontWeight: FontWeight.w500,
                           decoration: tugas.checklistStatus.every((s) => s)
                               ? TextDecoration.lineThrough
                               : null,
                         ),
                       ),
-                      if (isLate)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            'Melewati tenggat ${_getTimeDifference(tugas.tanggal)}',
-                            style: TextStyle(
-                              color: (isDarkMode 
-                                ? const Color.fromARGB(255, 255, 255, 255)
-                                : (isLate ? const Color.fromARGB(255, 0, 0, 0)! : const Color.fromARGB(255, 0, 0, 0)!)),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 8),
+              
+              // TIME SECTION
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.access_time,
+                      size: 16,
+                      color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Tenggat: ${DateFormat('HH:mm').format(tugas.tanggal)}',
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    if (isLate) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        '(${_getTimeDifference(tugas.tanggal)})',
+                        style: const TextStyle(
+                          color: Color(0xFFFF6B6B),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // EXPANDED SECTION - Detail Tugas
+              if (isExpanded)
+                Container(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Divider(color: isDarkMode ? Colors.grey : Colors.grey[300]),
+                      const SizedBox(height: 12),
+                      
+                      // Tanggal Lengkap
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 16,
+                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Tanggal & Waktu',
+                                  style: TextStyle(
+                                    color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                                    fontSize: 11,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  DateFormat('d MMMM yyyy, HH:mm', 'id_ID').format(tugas.tanggal),
+                                  style: TextStyle(
+                                    color: isLate ? const Color(0xFFFF6B6B) : textColor,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
+                        ],
+                      ),
+                      
+                      // Keterangan (jika ada)
+                      if (tugas.keterangan != null && tugas.keterangan!.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.description_outlined,
+                              size: 16,
+                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Keterangan',
+                                    style: TextStyle(
+                                      color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    tugas.keterangan!,
+                                    style: TextStyle(
+                                      color: textColor,
+                                      fontSize: 13,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
+                      ],
                     ],
                   ),
                 ),
-              ],
-            ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.access_time,
-                  size: 16,
-                  color: isDarkMode 
-                      ? const Color.fromARGB(255, 255, 255, 255)
-                      : (isLate ? const Color.fromARGB(255, 0, 0, 0) : const Color.fromARGB(255, 0, 0, 0)),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Tenggat: ${DateFormat('HH:mm').format(tugas.tanggal)}',
-                  style: TextStyle(
-                    color: isDarkMode 
-                        ? const Color.fromARGB(255, 255, 255, 255)
-                        : (isLate ? const Color.fromARGB(255, 0, 0, 0) : const Color.fromARGB(255, 0, 0, 0)),
-                    fontSize: 12,
-                    fontWeight: isLate ? FontWeight.w600 : FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-        ],
-      ),
+        );
+      },
     );
   }
 

@@ -1,6 +1,6 @@
 // views/home_page.dart
 // ========================================
-// HOME PAGE - DENGAN PERINGATAN TELAT
+// HOME PAGE - DENGAN DROPDOWN TUGAS
 // ========================================
 
 import 'package:flutter/material.dart';
@@ -33,28 +33,16 @@ class _HomePageState extends State<HomePage> {
   final MataKuliahController _mataKuliahController = MataKuliahController();
   final NavigationController _navigationController = NavigationController();
   DateTime selectedDate = DateTime.now();
-  Timer? _blinkTimer;
-  bool _showWarning = true;
 
   @override
   void initState() {
     super.initState();
     _navigationController.setIndex(0);
-    
-    // Timer untuk animasi berkedip peringatan
-    _blinkTimer = Timer.periodic(const Duration(milliseconds: 800), (timer) {
-      if (mounted) {
-        setState(() {
-          _showWarning = !_showWarning;
-        });
-      }
-    });
   }
 
   @override
   void dispose() {
     _navigationController.dispose();
-    _blinkTimer?.cancel();
     super.dispose();
   }
 
@@ -302,6 +290,11 @@ class _HomePageState extends State<HomePage> {
   Widget _buildJadwalCard(Jadwal jadwal, bool isDarkMode, Color cardColor, Color textColor) {
     final mataKuliah = _mataKuliahController.getMataKuliahById(jadwal.mataKuliahId);
     bool isExpanded = false;
+    
+    Color mataKuliahColor = const Color(0xFF7AB8FF);
+    if (mataKuliah != null && mataKuliah.warna.isNotEmpty) {
+      mataKuliahColor = _hexToColor(mataKuliah.warna);
+    }
 
     return StatefulBuilder(
       builder: (context, setCardState) {
@@ -359,15 +352,24 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ],
                       ),
-                      const SizedBox(width: 20),
+                      const SizedBox(width: 15),
+                      Container(
+                        width: 3,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: mataKuliahColor,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 15),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               mataKuliah?.nama ?? 'Mata Kuliah',
-                              style: const TextStyle(
-                                color: Color(0xFF7AB8FF),
+                              style: TextStyle(
+                                color: mataKuliahColor,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -464,6 +466,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // UPDATED: Card Tugas dengan Dropdown
   Widget _buildTugasCard(Tugas tugas, bool isDarkMode, Color cardColor, Color textColor) {
     bool isExpanded = false;
     final mataKuliah = _mataKuliahController.getMataKuliahById(tugas.mataKuliahId);
@@ -480,136 +483,136 @@ class _HomePageState extends State<HomePage> {
           duration: const Duration(milliseconds: 300),
           margin: const EdgeInsets.only(bottom: 15),
           decoration: BoxDecoration(
-            color: isLate 
-                ? (isDarkMode ? const Color(0xFF3D1F1F) : const Color(0xFFFFEBEE))
-                : cardColor,
+            color: cardColor,
             borderRadius: BorderRadius.circular(15),
             border: isLate 
-                ? Border.all(color: const Color(0xFFFF6B6B), width: 3)
+                ? Border.all(color: const Color(0xFFFF6B6B), width: 2)
                 : null,
+            boxShadow: [
+              BoxShadow(
+                color: (isLate ? const Color(0xFFFF6B6B) : Colors.black)
+                    .withOpacity(isLate ? 0.2 : (isDarkMode ? 0.2 : 0.05)),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             children: [
-              // Header dengan badge TELAT
-              if (isLate)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                ),
-
+              // HEADER - Clickable untuk expand/collapse
               InkWell(
                 onTap: () {
-                  _showTugasDialog(tugas);
+                  setCardState(() {
+                    isExpanded = !isExpanded;
+                  });
                 },
                 borderRadius: BorderRadius.circular(15),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              tugas.mataKuliahNama,
+                      Icon(
+                        isExpanded ? Icons.keyboard_arrow_down : Icons.chevron_right,
+                        color: textColor,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Badge TELAT dan Nama Mata Kuliah
+                            Row(
+                              children: [
+                                if (isLate)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    margin: const EdgeInsets.only(right: 8),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFF6B6B),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text(
+                                      'TELAT',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                Expanded(
+                                  child: Text(
+                                    tugas.mataKuliahNama,
+                                    style: TextStyle(
+                                      color: isLate ? const Color(0xFFFF6B6B) : tugasColor,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.3,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            // Judul Tugas
+                            Text(
+                              tugas.judul,
                               style: TextStyle(
-                                color: isLate ? const Color(0xFFFFFFFF) : tugasColor,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                                color: textColor,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                height: 1.3,
                               ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.settings,
-                              color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                            const SizedBox(height: 12),
+                            // Label "Tugas" dengan badge prioritas
+                            Row(
+                              children: [
+                                Text(
+                                  'Tugas',
+                                  style: TextStyle(
+                                    color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                                if (tugas.isPrioritas) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFF6B6B),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Text(
+                                      '!',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
-                            onPressed: () {
-                              setCardState(() {
-                                isExpanded = !isExpanded;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        tugas.judul,
-                        style: TextStyle(
-                          color: isLate 
-                              ? const Color.fromARGB(255, 255, 255, 255)
-                              : (isDarkMode ? Colors.grey[400] : Colors.grey[700]),
-                          fontSize: 14,
-                          fontWeight: isLate ? FontWeight.w600 : FontWeight.normal,
+                          ],
                         ),
                       ),
-                      if (isLate)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                color: const Color.fromARGB(255, 255, 255, 255),
-                                size: 14,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Melewati tenggat ${_getTimeDifference(tugas.tanggal)}',
-                                style: const TextStyle(
-                                  color: Color.fromARGB(255, 255, 255, 255),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.settings,
+                          color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                          size: 22,
                         ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Text(
-                            'Tugas ',
-                            style: TextStyle(
-                              color: isLate ? const Color(0xFFFF6B6B) : textColor,
-                              fontWeight: isLate ? FontWeight.w600 : FontWeight.normal,
-                            ),
-                          ),
-                          if (tugas.isPrioritas)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: const Color.fromARGB(255, 243, 0, 0),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Text(
-                                '!',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (isExpanded)
-                Container(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Divider(color: isDarkMode ? Colors.grey : Colors.grey[300]),
-                      const SizedBox(height: 10),
-                      _buildDropdownButton(
-                        icon: Icons.edit,
-                        label: 'Edit Tugas',
-                        isDarkMode: isDarkMode,
-                        onTap: () {
+                        onPressed: () {
+                          // Navigate ke edit page
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -617,17 +620,110 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ).then((_) => setState(() {}));
                         },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       ),
-                      const SizedBox(height: 10),
-                      _buildDropdownButton(
-                        icon: Icons.checklist,
-                        label: 'Lihat Checklist',
-                        isDarkMode: isDarkMode,
-                        onTap: () {
-                          _showTugasDialog(tugas);
-                        },
+                    ],
+                  ),
+                ),
+              ),
+              // EXPANDED CONTENT - Detail Tugas
+              if (isExpanded)
+                Container(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Divider(color: isDarkMode ? Colors.grey : Colors.grey[300]),
+                      const SizedBox(height: 15),
+                      // Waktu Tenggat
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 18,
+                            color: isLate 
+                                ? const Color(0xFFFF6B6B) 
+                                : (isDarkMode ? Colors.grey[400] : Colors.grey[600]),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Tenggat',
+                                  style: TextStyle(
+                                    color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  DateFormat('d MMMM yyyy, HH:mm', 'id_ID').format(tugas.tanggal),
+                                  style: TextStyle(
+                                    color: isLate ? const Color(0xFFFF6B6B) : textColor,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                if (isLate)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      'Telat ${_getTimeDifference(tugas.tanggal)}',
+                                      style: const TextStyle(
+                                        color: Color(0xFFFF6B6B),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 10),
+                      // Keterangan (jika ada)
+                      if (tugas.keterangan != null && tugas.keterangan!.isNotEmpty) ...[
+                        const SizedBox(height: 15),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.description_outlined,
+                              size: 18,
+                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Keterangan',
+                                    style: TextStyle(
+                                      color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    tugas.keterangan!,
+                                    style: TextStyle(
+                                      color: textColor,
+                                      fontSize: 14,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: 15),
+                      // Tombol Hapus
                       _buildDropdownButton(
                         icon: Icons.delete,
                         label: 'Hapus Tugas',
@@ -680,52 +776,52 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-void _showDeleteDialog(String jadwalId, String? mataKuliahId) async {
-  final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-  
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      backgroundColor: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
-      title: Text(
-        'Hapus Kelas',
-        style: TextStyle(color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
-      ),
-      content: Text(
-        'Apakah Anda yakin ingin menghapus kelas ini?',
-        style: TextStyle(color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Batal'),
+  void _showDeleteDialog(String jadwalId, String? mataKuliahId) async {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
+        title: Text(
+          'Hapus Kelas',
+          style: TextStyle(color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
         ),
-        TextButton(
-          onPressed: () async {
-            await ScheduleManager().removeSchedule(jadwalId);
-            
-            _jadwalController.deleteJadwal(jadwalId);
-            if (mataKuliahId != null) {
-              _mataKuliahController.deleteMataKuliah(mataKuliahId);
-            }
-            Navigator.pop(context);
-            setState(() {});
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Kelas berhasil dihapus'),
-                backgroundColor: Color(0xFFFF6B6B),
-              ),
-            );
-          },
-          child: const Text(
-            'Hapus',
-            style: TextStyle(color: Color(0xFFFF6B6B)),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus kelas ini?',
+          style: TextStyle(color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
           ),
-        ),
-      ],
-    ),
-  );
-}
+          TextButton(
+            onPressed: () async {
+              await ScheduleManager().removeSchedule(jadwalId);
+              
+              _jadwalController.deleteJadwal(jadwalId);
+              if (mataKuliahId != null) {
+                _mataKuliahController.deleteMataKuliah(mataKuliahId);
+              }
+              Navigator.pop(context);
+              setState(() {});
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Kelas berhasil dihapus'),
+                  backgroundColor: Color(0xFFFF6B6B),
+                ),
+              );
+            },
+            child: const Text(
+              'Hapus',
+              style: TextStyle(color: Color(0xFFFF6B6B)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showDeleteTugasDialog(String tugasId) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -765,211 +861,6 @@ void _showDeleteDialog(String jadwalId, String? mataKuliahId) async {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  void _showTugasDialog(Tugas tugas) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final mataKuliah = _mataKuliahController.getMataKuliahById(tugas.mataKuliahId);
-    Color tugasColor = const Color(0xFF7AB8FF);
-    if (mataKuliah != null && mataKuliah.warna.isNotEmpty) {
-      tugasColor = _hexToColor(mataKuliah.warna);
-    }
-    
-    final isLate = _isLate(tugas);
-    
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          backgroundColor: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      DateFormat('HH:mm').format(tugas.tanggal),
-                      style: TextStyle(
-                        color: isLate 
-                            ? const Color(0xFFFF6B6B)
-                            : (isDarkMode ? Colors.white : const Color(0xFF1E2936)),
-                        fontSize: 16,
-                        fontWeight: isLate ? FontWeight.bold : FontWeight.normal,
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      icon: Icon(
-                        Icons.close,
-                        color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-                if (isLate)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                    margin: const EdgeInsets.only(bottom: 10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFF6B6B).withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFFF6B6B), width: 1.5),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          color: Color(0xFFFF6B6B),
-                          size: 18,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Melewati tenggat ${_getTimeDifference(tugas.tanggal)}',
-                            style: const TextStyle(
-                              color: Color(0xFFFF6B6B),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        tugas.mataKuliahNama,
-                        style: TextStyle(
-                          color: isLate ? const Color(0xFFFF6B6B) : tugasColor,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.settings,
-                        color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
-                      ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EditTugasPage(tugas: tugas),
-                          ),
-                        ).then((_) => setState(() {}));
-                      },
-                    ),
-                  ],
-                ),
-                Text(
-                  'Tenggat: ${DateFormat('d MMMM yyyy, HH:mm', 'id_ID').format(tugas.tanggal)}',
-                  style: TextStyle(
-                    color: isLate 
-                        ? const Color(0xFFFF6B6B)
-                        : (isDarkMode ? Colors.grey[500] : Colors.grey[600]),
-                    fontSize: 14,
-                    fontWeight: isLate ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Text(
-                      'Tugas ',
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
-                      ),
-                    ),
-                    if (tugas.isPrioritas)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFF6B6B),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Text(
-                          '!',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          side: BorderSide(
-                            color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: Text(
-                          'Cancel',
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.white : const Color(0xFF1E2936),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const TambahTugasPage(),
-                            ),
-                          ).then((_) {
-                            Navigator.pop(context);
-                            setState(() {});
-                          });
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF7AB8FF),
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text(
-                          '+ Assignment',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
