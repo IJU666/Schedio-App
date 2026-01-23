@@ -433,19 +433,21 @@ class _HomePageState extends State<HomePage> {
                         },
                       ),
                       const SizedBox(height: 10),
-                      _buildDropdownButton(
-                        icon: Icons.assignment_add,
-                        label: 'Tambah Tugas',
-                        isDarkMode: isDarkMode,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const TambahTugasPage(),
-                            ),
-                          ).then((_) => setState(() {}));
-                        },
-                      ),
+_buildDropdownButton(
+  icon: Icons.assignment_add,
+  label: 'Tambah Tugas',
+  isDarkMode: isDarkMode,
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TambahTugasPage(
+          preselectedMataKuliahId: jadwal.mataKuliahId, // Kirim ID mata kuliah
+        ),
+      ),
+    ).then((_) => setState(() {}));
+  },
+),
                       const SizedBox(height: 10),
                       _buildDropdownButton(
                         icon: Icons.delete,

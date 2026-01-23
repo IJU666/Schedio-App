@@ -11,7 +11,12 @@ import '../models/tugas.dart';
 import '../models/mata_kuliah.dart';
 
 class TambahTugasPage extends StatefulWidget {
-  const TambahTugasPage({super.key});
+final String? preselectedMataKuliahId;
+  const TambahTugasPage({
+    super.key,
+    this.preselectedMataKuliahId, // Tambahkan ini
+  });
+  
 
   @override
   State<TambahTugasPage> createState() => _TambahTugasPageState();
@@ -33,6 +38,16 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
     _keteranganController.dispose();
     super.dispose();
   }
+  @override
+void initState() {
+  super.initState();
+  
+  // Autofill mata kuliah jika ada preselectedMataKuliahId
+  if (widget.preselectedMataKuliahId != null) {
+    _selectedMataKuliah = _mataKuliahController
+        .getMataKuliahById(widget.preselectedMataKuliahId!);
+  }
+}
 
   Future<void> _selectDateTime(BuildContext context) async {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
