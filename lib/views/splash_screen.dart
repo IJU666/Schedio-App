@@ -1,6 +1,6 @@
 // views/splash_screen.dart
 // ========================================
-// ENHANCED SPLASH SCREEN - DENGAN ANIMASI
+// ENHANCED SPLASH SCREEN - DENGAN ANIMASI & CUSTOM LOGO
 // ========================================
 
 import 'package:flutter/material.dart';
@@ -175,12 +175,12 @@ class _SplashScreenState extends State<SplashScreen>
             },
           ),
           
-          // Main content (same position as original)
+          // Main content with CUSTOM LOGO
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Animated Icon
+                // Animated Custom Logo - Path diperbaiki ke assets/icon/app_icon.png
                 AnimatedBuilder(
                   animation: _iconController,
                   builder: (context, child) {
@@ -188,33 +188,40 @@ class _SplashScreenState extends State<SplashScreen>
                       scale: _iconScaleAnimation.value,
                       child: Transform.rotate(
                         angle: _iconRotationAnimation.value,
-                        child: Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: const Color(0xFF7AB8FF).withOpacity(0.1),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF7AB8FF).withOpacity(
-                                  0.3 * _iconScaleAnimation.value,
-                                ),
-                                blurRadius: 30,
-                                spreadRadius: 5,
+                        child: Image.asset(
+                          'assets/icon/app_splash.png',
+                          width: 140,
+                          height: 140,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            // Fallback jika logo tidak ditemukan
+                            return Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: const Color(0xFF7AB8FF).withOpacity(0.1),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF7AB8FF).withOpacity(0.3),
+                                    blurRadius: 30,
+                                    spreadRadius: 5,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.calendar_today,
-                            size: 80,
-                            color: Color(0xFF7AB8FF),
-                          ),
+                              child: const Icon(
+                                Icons.calendar_today,
+                                size: 80,
+                                color: Color(0xFF7AB8FF),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     );
                   },
                 ),
                 
-                const SizedBox(height: 20),
+                const SizedBox(height: 30),
                 
                 // Animated Text
                 FadeTransition(
@@ -222,18 +229,19 @@ class _SplashScreenState extends State<SplashScreen>
                   child: SlideTransition(
                     position: _textSlideAnimation,
                     child: const Text(
-                      'Schedule App',
+                      'Schedio',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
                 ),
                 
                 // Animated loading indicator
-                const SizedBox(height: 40),
+                const SizedBox(height: 50),
                 FadeTransition(
                   opacity: _textFadeAnimation,
                   child: SizedBox(

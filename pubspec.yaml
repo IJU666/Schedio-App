@@ -49,7 +49,9 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
+  assets:
+    - assets/icon/app_splash.png
+    
 flutter_launcher_icons:
   android: true
   ios: true
