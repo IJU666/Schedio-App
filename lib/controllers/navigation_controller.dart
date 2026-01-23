@@ -9,13 +9,13 @@ class NavigationController extends ChangeNotifier {
   final List<NavigationItem> _items = [
     NavigationItem(
       id: 'today',
-      label: 'Today',
+      label: 'Hari Ini',
       icon: Icons.today_rounded,
       route: '/home',
     ),
     NavigationItem(
       id: 'schedule',
-      label: 'Schedule',
+      label: 'Jadwal',
       icon: Icons.calendar_month_rounded,
       route: '/kalender',
     ),
@@ -28,13 +28,13 @@ class NavigationController extends ChangeNotifier {
     ),
     NavigationItem(
       id: 'assignments',
-      label: 'Assignments',
+      label: 'Tugas',
       icon: Icons.assignment_rounded,
       route: '/daftarTugas',
     ),
     NavigationItem(
       id: 'settings',
-      label: 'Settings',
+      label: 'Opsi',
       icon: Icons.settings_rounded,
       route: '/pengaturan',
     ),
