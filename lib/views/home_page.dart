@@ -59,13 +59,31 @@ class _HomePageState extends State<HomePage> {
     return now.isAfter(tugas.tanggal) && !tugas.checklistStatus.every((s) => s);
   }
 
+  Widget _buildBadge(int count) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: const BoxDecoration(
+        color: Color(0xFFFF6B6B),
+        shape: BoxShape.circle,
+      ),
+      child: Text(
+        count.toString(),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
     final cardColor = Theme.of(context).cardColor;
     final textColor = Theme.of(context).colorScheme.onSurface;
-    
+
     return Scaffold(
       backgroundColor: bgColor,
       body: SafeArea(
@@ -111,7 +129,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildDateGridSelector(bool isDarkMode, Color cardColor, Color textColor) {
+  Widget _buildDateGridSelector(
+      bool isDarkMode, Color cardColor, Color textColor) {
     final today = DateTime.now();
     final dates = List.generate(7, (index) {
       return today.add(Duration(days: index - 1));
@@ -122,112 +141,62 @@ class _HomePageState extends State<HomePage> {
     final dateBorderRadius = isPortraitMobile ? 10.0 : 15.0;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 7,
-          crossAxisSpacing: 4,
-          mainAxisSpacing: 4,
-          childAspectRatio: 0.52,
-        ),
-        itemCount: dates.length,
-        itemBuilder: (context, index) {
-          final date = dates[index];
-          final isSelected = date.day == selectedDate.day &&
-              date.month == selectedDate.month &&
-              date.year == selectedDate.year;
-          final tugasCount = _tugasController.getTugasByDate(date).length;
-          final hasNotification = tugasCount > 0;
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: Row(
+          children: dates.map((date) {
+            final isSelected = date.day == selectedDate.day &&
+                date.month == selectedDate.month &&
+                date.year == selectedDate.year;
 
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                selectedDate = date;
-              });
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              decoration: BoxDecoration(
-                color: isSelected 
-                    ? const Color(0xFF7AB8FF) 
-                    : cardColor,
-                borderRadius: BorderRadius.circular(dateBorderRadius),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: const Color(0xFF7AB8FF).withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
+            final tugasCount = _tugasController.getTugasByDate(date).length;
+
+            return Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    selectedDate = date;
+                  });
+                },
+                child: SizedBox(
+                  height: 80, // 🔑 samakan tinggi semua hari
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    decoration: BoxDecoration(
+                      color: isSelected ? const Color(0xFF7AB8FF) : cardColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          date.day.toString(),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isSelected ? Colors.white : textColor,
+                          ),
                         ),
-                      ]
-                    : [],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-                    Text(
-                      date.day.toString(),
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: isSelected 
-                            ? Colors.white 
-                            : (isDarkMode ? Colors.grey[400] : Colors.grey[700]),
-                      ),
+                        Text(
+                          DateFormat('EEE', 'id_ID').format(date),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isSelected ? Colors.white70 : Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        tugasCount > 0
+                            ? _buildBadge(tugasCount)
+                            : const SizedBox(
+                                height: 18), // 🔑 spacer pengganti badge
+                      ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      DateFormat('EEE', 'id_ID').format(date),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isSelected
-                            ? Colors.white
-                            : (isDarkMode ? Colors.grey[500] : Colors.grey[600]),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 6),
-                    SizedBox(
-                      height: 18,
-                      child: hasNotification
-                          ? Container(
-                              constraints: const BoxConstraints(
-                                minWidth: 18,
-                                minHeight: 18,
-                              ),
-                              padding: const EdgeInsets.all(3),
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFFF6B6B),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  tugasCount.toString(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    height: 1,
-                                  ),
-                                ),
-                              ),
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          );
-        },
-      ),
-    );
+            );
+          }).toList(),
+        ));
   }
 
   Widget _buildScheduleList(bool isDarkMode, Color cardColor, Color textColor) {
@@ -250,7 +219,8 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          ...jadwalHariIni.map((jadwal) => _buildJadwalCard(jadwal, isDarkMode, cardColor, textColor)),
+          ...jadwalHariIni.map((jadwal) =>
+              _buildJadwalCard(jadwal, isDarkMode, cardColor, textColor)),
         ],
         if (tugasHariIni.isNotEmpty) ...[
           Padding(
@@ -267,7 +237,8 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          ...tugasHariIni.map((tugas) => _buildTugasCard(tugas, isDarkMode, cardColor, textColor)),
+          ...tugasHariIni.map((tugas) =>
+              _buildTugasCard(tugas, isDarkMode, cardColor, textColor)),
         ],
         if (jadwalHariIni.isEmpty && tugasHariIni.isEmpty)
           Center(
@@ -287,10 +258,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildJadwalCard(Jadwal jadwal, bool isDarkMode, Color cardColor, Color textColor) {
-    final mataKuliah = _mataKuliahController.getMataKuliahById(jadwal.mataKuliahId);
+  Widget _buildJadwalCard(
+      Jadwal jadwal, bool isDarkMode, Color cardColor, Color textColor) {
+    final mataKuliah =
+        _mataKuliahController.getMataKuliahById(jadwal.mataKuliahId);
     bool isExpanded = false;
-    
+
     Color mataKuliahColor = const Color(0xFF7AB8FF);
     if (mataKuliah != null && mataKuliah.warna.isNotEmpty) {
       mataKuliahColor = _hexToColor(mataKuliah.warna);
@@ -326,7 +299,9 @@ class _HomePageState extends State<HomePage> {
                   child: Row(
                     children: [
                       Icon(
-                        isExpanded ? Icons.keyboard_arrow_down : Icons.chevron_right,
+                        isExpanded
+                            ? Icons.keyboard_arrow_down
+                            : Icons.chevron_right,
                         color: textColor,
                         size: 24,
                       ),
@@ -346,7 +321,9 @@ class _HomePageState extends State<HomePage> {
                           Text(
                             jadwal.jamSelesai,
                             style: TextStyle(
-                              color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                              color: isDarkMode
+                                  ? Colors.grey[500]
+                                  : Colors.grey[600],
                               fontSize: 14,
                             ),
                           ),
@@ -378,17 +355,22 @@ class _HomePageState extends State<HomePage> {
                             Text(
                               jadwal.ruangan,
                               style: TextStyle(
-                                color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                                color: isDarkMode
+                                    ? Colors.grey[500]
+                                    : Colors.grey[600],
                                 fontSize: 14,
                               ),
                             ),
-                            if (mataKuliah?.dosen != null && mataKuliah!.dosen.isNotEmpty)
+                            if (mataKuliah?.dosen != null &&
+                                mataKuliah!.dosen.isNotEmpty)
                               Padding(
                                 padding: const EdgeInsets.only(top: 5),
                                 child: Text(
                                   mataKuliah.dosen,
                                   style: TextStyle(
-                                    color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                                    color: isDarkMode
+                                        ? Colors.grey[400]
+                                        : Colors.grey[700],
                                     fontSize: 13,
                                   ),
                                 ),
@@ -399,7 +381,8 @@ class _HomePageState extends State<HomePage> {
                       IconButton(
                         icon: Icon(
                           Icons.settings,
-                          color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                          color:
+                              isDarkMode ? Colors.grey[400] : Colors.grey[700],
                         ),
                         onPressed: () {
                           setCardState(() {
@@ -417,7 +400,8 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Divider(color: isDarkMode ? Colors.grey : Colors.grey[300]),
+                      Divider(
+                          color: isDarkMode ? Colors.grey : Colors.grey[300]),
                       const SizedBox(height: 10),
                       _buildDropdownButton(
                         icon: Icons.edit,
@@ -427,27 +411,29 @@ class _HomePageState extends State<HomePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => EditKelasPage(jadwalId: jadwal.id),
+                              builder: (context) =>
+                                  EditKelasPage(jadwalId: jadwal.id),
                             ),
                           ).then((_) => setState(() {}));
                         },
                       ),
                       const SizedBox(height: 10),
-_buildDropdownButton(
-  icon: Icons.assignment_add,
-  label: 'Tambah Tugas',
-  isDarkMode: isDarkMode,
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TambahTugasPage(
-          preselectedMataKuliahId: jadwal.mataKuliahId, // Kirim ID mata kuliah
-        ),
-      ),
-    ).then((_) => setState(() {}));
-  },
-),
+                      _buildDropdownButton(
+                        icon: Icons.assignment_add,
+                        label: 'Tambah Tugas',
+                        isDarkMode: isDarkMode,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => TambahTugasPage(
+                                preselectedMataKuliahId:
+                                    jadwal.mataKuliahId, // Kirim ID mata kuliah
+                              ),
+                            ),
+                          ).then((_) => setState(() {}));
+                        },
+                      ),
                       const SizedBox(height: 10),
                       _buildDropdownButton(
                         icon: Icons.delete,
@@ -469,9 +455,11 @@ _buildDropdownButton(
   }
 
   // UPDATED: Card Tugas dengan Dropdown
-  Widget _buildTugasCard(Tugas tugas, bool isDarkMode, Color cardColor, Color textColor) {
+  Widget _buildTugasCard(
+      Tugas tugas, bool isDarkMode, Color cardColor, Color textColor) {
     bool isExpanded = false;
-    final mataKuliah = _mataKuliahController.getMataKuliahById(tugas.mataKuliahId);
+    final mataKuliah =
+        _mataKuliahController.getMataKuliahById(tugas.mataKuliahId);
     Color tugasColor = const Color(0xFF7AB8FF);
     if (mataKuliah != null && mataKuliah.warna.isNotEmpty) {
       tugasColor = _hexToColor(mataKuliah.warna);
@@ -487,7 +475,7 @@ _buildDropdownButton(
           decoration: BoxDecoration(
             color: cardColor,
             borderRadius: BorderRadius.circular(15),
-            border: isLate 
+            border: isLate
                 ? Border.all(color: const Color(0xFFFF6B6B), width: 2)
                 : null,
             boxShadow: [
@@ -514,7 +502,9 @@ _buildDropdownButton(
                   child: Row(
                     children: [
                       Icon(
-                        isExpanded ? Icons.keyboard_arrow_down : Icons.chevron_right,
+                        isExpanded
+                            ? Icons.keyboard_arrow_down
+                            : Icons.chevron_right,
                         color: textColor,
                         size: 24,
                       ),
@@ -528,7 +518,8 @@ _buildDropdownButton(
                               children: [
                                 if (isLate)
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
                                     margin: const EdgeInsets.only(right: 8),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFFF6B6B),
@@ -548,7 +539,9 @@ _buildDropdownButton(
                                   child: Text(
                                     tugas.mataKuliahNama,
                                     style: TextStyle(
-                                      color: isLate ? const Color(0xFFFF6B6B) : tugasColor,
+                                      color: isLate
+                                          ? const Color(0xFFFF6B6B)
+                                          : tugasColor,
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                       letterSpacing: 0.3,
@@ -579,7 +572,9 @@ _buildDropdownButton(
                                 Text(
                                   'Tugas',
                                   style: TextStyle(
-                                    color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                                    color: isDarkMode
+                                        ? Colors.grey[500]
+                                        : Colors.grey[600],
                                     fontSize: 13,
                                     fontWeight: FontWeight.w400,
                                   ),
@@ -587,7 +582,8 @@ _buildDropdownButton(
                                 if (tugas.isPrioritas) ...[
                                   const SizedBox(width: 8),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFFF6B6B),
                                       borderRadius: BorderRadius.circular(10),
@@ -610,7 +606,8 @@ _buildDropdownButton(
                       IconButton(
                         icon: Icon(
                           Icons.settings,
-                          color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                          color:
+                              isDarkMode ? Colors.grey[400] : Colors.grey[700],
                           size: 22,
                         ),
                         onPressed: () {
@@ -636,7 +633,8 @@ _buildDropdownButton(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Divider(color: isDarkMode ? Colors.grey : Colors.grey[300]),
+                      Divider(
+                          color: isDarkMode ? Colors.grey : Colors.grey[300]),
                       const SizedBox(height: 15),
                       // Waktu Tenggat
                       Row(
@@ -644,9 +642,11 @@ _buildDropdownButton(
                           Icon(
                             Icons.access_time,
                             size: 18,
-                            color: isLate 
-                                ? const Color(0xFFFF6B6B) 
-                                : (isDarkMode ? Colors.grey[400] : Colors.grey[600]),
+                            color: isLate
+                                ? const Color(0xFFFF6B6B)
+                                : (isDarkMode
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600]),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -656,15 +656,20 @@ _buildDropdownButton(
                                 Text(
                                   'Tenggat',
                                   style: TextStyle(
-                                    color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                                    color: isDarkMode
+                                        ? Colors.grey[500]
+                                        : Colors.grey[600],
                                     fontSize: 12,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  DateFormat('d MMMM yyyy, HH:mm', 'id_ID').format(tugas.tanggal),
+                                  DateFormat('d MMMM yyyy, HH:mm', 'id_ID')
+                                      .format(tugas.tanggal),
                                   style: TextStyle(
-                                    color: isLate ? const Color(0xFFFF6B6B) : textColor,
+                                    color: isLate
+                                        ? const Color(0xFFFF6B6B)
+                                        : textColor,
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -687,7 +692,8 @@ _buildDropdownButton(
                         ],
                       ),
                       // Keterangan (jika ada)
-                      if (tugas.keterangan != null && tugas.keterangan!.isNotEmpty) ...[
+                      if (tugas.keterangan != null &&
+                          tugas.keterangan!.isNotEmpty) ...[
                         const SizedBox(height: 15),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -695,7 +701,9 @@ _buildDropdownButton(
                             Icon(
                               Icons.description_outlined,
                               size: 18,
-                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -705,7 +713,9 @@ _buildDropdownButton(
                                   Text(
                                     'Keterangan',
                                     style: TextStyle(
-                                      color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                                      color: isDarkMode
+                                          ? Colors.grey[500]
+                                          : Colors.grey[600],
                                       fontSize: 12,
                                     ),
                                   ),
@@ -768,7 +778,8 @@ _buildDropdownButton(
             Text(
               label,
               style: TextStyle(
-                color: color ?? (isDarkMode ? Colors.white : const Color(0xFF1E2936)),
+                color: color ??
+                    (isDarkMode ? Colors.white : const Color(0xFF1E2936)),
                 fontSize: 15,
               ),
             ),
@@ -780,18 +791,20 @@ _buildDropdownButton(
 
   void _showDeleteDialog(String jadwalId, String? mataKuliahId) async {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
         title: Text(
           'Hapus Kelas',
-          style: TextStyle(color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
+          style: TextStyle(
+              color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
         ),
         content: Text(
           'Apakah Anda yakin ingin menghapus kelas ini?',
-          style: TextStyle(color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
+          style: TextStyle(
+              color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
         ),
         actions: [
           TextButton(
@@ -801,7 +814,7 @@ _buildDropdownButton(
           TextButton(
             onPressed: () async {
               await ScheduleManager().removeSchedule(jadwalId);
-              
+
               _jadwalController.deleteJadwal(jadwalId);
               if (mataKuliahId != null) {
                 _mataKuliahController.deleteMataKuliah(mataKuliahId);
@@ -827,18 +840,20 @@ _buildDropdownButton(
 
   void _showDeleteTugasDialog(String tugasId) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: isDarkMode ? const Color(0xFF2A3947) : Colors.white,
         title: Text(
           'Hapus Tugas',
-          style: TextStyle(color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
+          style: TextStyle(
+              color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
         ),
         content: Text(
           'Apakah Anda yakin ingin menghapus tugas ini?',
-          style: TextStyle(color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
+          style: TextStyle(
+              color: isDarkMode ? Colors.white : const Color(0xFF1E2936)),
         ),
         actions: [
           TextButton(
@@ -870,7 +885,7 @@ _buildDropdownButton(
   String _getTimeDifference(DateTime deadline) {
     final now = DateTime.now();
     final difference = now.difference(deadline);
-    
+
     if (difference.inDays > 0) {
       return '${difference.inDays} hari yang lalu';
     } else if (difference.inHours > 0) {
