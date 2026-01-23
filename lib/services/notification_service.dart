@@ -40,7 +40,7 @@ class ClassNotificationService {
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings('@drawable/app_icon');
 
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -242,7 +242,7 @@ class ClassNotificationService {
       showWhen: true,
       enableVibration: true,
       playSound: true,
-      icon: '@mipmap/ic_launcher',
+      icon: '@drawable/app_icon',
       color: Color(0xFF7AB8FF),
       styleInformation: BigTextStyleInformation(''),
     );
