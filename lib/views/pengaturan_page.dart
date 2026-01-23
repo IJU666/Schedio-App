@@ -9,6 +9,9 @@ import '../controllers/theme_controller.dart';
 import '../controllers/navigation_controller.dart';
 import '../controllers/mata_kuliah_controller.dart';
 import '../controllers/jadwal_controller.dart';
+import '../controllers/tugas_controller.dart';
+import '../services/schedule_manager.dart';
+import '../services/notification_preference_service.dart';
 import '../models/mata_kuliah.dart';
 import '../models/jadwal.dart';
 import '../widgets/modern_bottom_navbar.dart';
@@ -24,9 +27,13 @@ class PengaturanPage extends StatefulWidget {
 
 class _PengaturanPageState extends State<PengaturanPage> {
   bool isPengingatEnabled = true;
+  bool _isLoadingPreference = true;
   final NavigationController _navigationController = NavigationController();
   final MataKuliahController _mataKuliahController = MataKuliahController();
   final JadwalController _jadwalController = JadwalController();
+  final TugasController _tugasController = TugasController();
+  final ScheduleManager _scheduleManager = ScheduleManager();
+  final NotificationPreferenceService _preferenceService = NotificationPreferenceService();
   
   List<CourseItemData> courses = [];
 
@@ -35,6 +42,15 @@ class _PengaturanPageState extends State<PengaturanPage> {
     super.initState();
     _navigationController.setIndex(4);
     _loadCourses();
+    _loadNotificationPreference();
+  }
+
+  Future<void> _loadNotificationPreference() async {
+    final enabled = await _preferenceService.isNotificationEnabled();
+    setState(() {
+      isPengingatEnabled = enabled;
+      _isLoadingPreference = false;
+    });
   }
 
   void _loadCourses() {
@@ -103,6 +119,46 @@ class _PengaturanPageState extends State<PengaturanPage> {
     // Reload courses setelah menambah kelas baru
     if (result == true || result == null) {
       _loadCourses();
+    }
+  }
+
+  Future<void> _handlePengingatToggle(bool value) async {
+    setState(() {
+      isPengingatEnabled = value;
+    });
+
+    // Simpan preference
+    await _preferenceService.setNotificationEnabled(value);
+
+    // Resync semua notifikasi (kelas dan tugas)
+    if (value) {
+      // Aktifkan: Schedule ulang semua notifikasi
+      await _scheduleManager.resyncAllNotifications();
+      await _tugasController.resyncAllTaskNotifications();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('🔔 Pengingat diaktifkan untuk semua tugas dan kelas'),
+            backgroundColor: Color(0xFF4ECCA3),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } else {
+      // Nonaktifkan: Cancel semua notifikasi
+      await _scheduleManager.resyncAllNotifications(); // Akan cancel semua karena toggle off
+      await _tugasController.resyncAllTaskNotifications(); // Akan cancel semua karena toggle off
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('🔕 Pengingat dinonaktifkan untuk semua tugas dan kelas'),
+            backgroundColor: Color(0xFFFF6B6B),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 
@@ -199,31 +255,55 @@ class _PengaturanPageState extends State<PengaturanPage> {
                 const SizedBox(height: 24),
                 
                 // Pengingat Toggle
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Pengingat',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: textColor,
+                if (_isLoadingPreference)
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: const Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Pengingat',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: textColor,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Notifikasi untuk semua tugas dan kelas',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      Switch(
-                        value: isPengingatEnabled,
-                        onChanged: (bool value) {
-                          setState(() {
-                            isPengingatEnabled = value;
-                          });
-                        },
-                        activeColor: const Color(0xFF4ECDC4),
-                        activeTrackColor: const Color(0xFF4ECDC4).withOpacity(0.5),
-                      ),
-                    ],
+                        Switch(
+                          value: isPengingatEnabled,
+                          onChanged: _handlePengingatToggle,
+                          activeColor: const Color(0xFF4ECDC4),
+                          activeTrackColor: const Color(0xFF4ECDC4).withOpacity(0.5),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
                 const SizedBox(height: 8),
                 
                 // Dark Mode Toggle
@@ -268,8 +348,6 @@ class _PengaturanPageState extends State<PengaturanPage> {
                   },
                 ),
                 const SizedBox(height: 16),
-                
-
               ],
             ),
           ),

@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hive/hive.dart';
 import '../models/jadwal.dart';
 import 'notification_service.dart';
+import 'notification_preference_service.dart';
 
 class ScheduleManager {
   static final ScheduleManager _instance = ScheduleManager._();
@@ -9,6 +10,7 @@ class ScheduleManager {
   ScheduleManager._();
 
   final ClassNotificationService _notificationService = ClassNotificationService();
+  final NotificationPreferenceService _preferenceService = NotificationPreferenceService();
 
   Future<void> initialize() async {
     await _notificationService.initialize();
@@ -32,7 +34,16 @@ class ScheduleManager {
   }
 
   Future<void> resyncAllNotifications() async {
-    print('🔄 Menyinkronkan ulang semua notifikasi...');
+    print('🔄 Menyinkronkan ulang semua notifikasi kelas...');
+    
+    // CEK TOGGLE PENGINGAT
+    final isEnabled = await _preferenceService.isNotificationEnabled();
+    if (!isEnabled) {
+      print('⚠️ Notifikasi dinonaktifkan - Cancel semua notifikasi kelas');
+      await _notificationService.cancelAllNotifications();
+      return;
+    }
+    
     await _notificationService.cancelAllNotifications();
     
     final jadwalBox = Hive.box<Jadwal>('jadwalBox');

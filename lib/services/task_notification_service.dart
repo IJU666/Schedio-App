@@ -10,6 +10,7 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
+import 'notification_preference_service.dart';
 
 class TaskNotificationService {
   static final TaskNotificationService _instance = TaskNotificationService._();
@@ -18,6 +19,7 @@ class TaskNotificationService {
 
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+  final NotificationPreferenceService _preferenceService = NotificationPreferenceService();
 
   bool _initialized = false;
 
@@ -78,6 +80,13 @@ class TaskNotificationService {
     required DateTime deadline,
   }) async {
     if (!_initialized) await initialize();
+
+    // CEK TOGGLE PENGINGAT
+    final isEnabled = await _preferenceService.isNotificationEnabled();
+    if (!isEnabled) {
+      print('⚠️ Notifikasi dinonaktifkan - Skip scheduling untuk $taskId');
+      return;
+    }
 
     try {
       // Cancel notifikasi lama jika ada

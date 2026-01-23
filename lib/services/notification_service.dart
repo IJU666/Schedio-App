@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:hive/hive.dart';
 import '../models/jadwal.dart';
 import '../models/mata_kuliah.dart';
+import 'notification_preference_service.dart';
 
 class ClassNotificationService {
   static final ClassNotificationService _instance = ClassNotificationService._();
@@ -15,6 +16,7 @@ class ClassNotificationService {
 
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+  final NotificationPreferenceService _preferenceService = NotificationPreferenceService();
 
   bool _initialized = false;
 
@@ -64,6 +66,13 @@ class ClassNotificationService {
 
   Future<void> scheduleAllNotificationsForClass(String jadwalId) async {
     if (!_initialized) await initialize();
+
+    // CEK TOGGLE PENGINGAT
+    final isEnabled = await _preferenceService.isNotificationEnabled();
+    if (!isEnabled) {
+      print('⚠️ Notifikasi dinonaktifkan - Skip scheduling untuk $jadwalId');
+      return;
+    }
 
     try {
       final jadwalBox = Hive.box<Jadwal>('jadwalBox');

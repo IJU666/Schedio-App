@@ -6,10 +6,12 @@
 import 'package:hive/hive.dart';
 import '../models/tugas.dart';
 import '../services/task_notification_service.dart';
+import '../services/notification_preference_service.dart';
 
 class TugasController {
   final Box<Tugas> _tugasBox = Hive.box<Tugas>('tugasBox');
   final TaskNotificationService _notificationService = TaskNotificationService();
+  final NotificationPreferenceService _preferenceService = NotificationPreferenceService();
 
   /// Get all tugas
   List<Tugas> getAllTugas() {
@@ -92,9 +94,17 @@ class TugasController {
     await _notificationService.initialize();
   }
 
-  /// Resync semua notifikasi tugas (untuk dipanggil saat app start)
+  /// Resync semua notifikasi tugas (untuk dipanggil saat app start atau toggle pengingat)
   Future<void> resyncAllTaskNotifications() async {
     print('🔄 Menyinkronkan ulang notifikasi tugas...');
+    
+    // CEK TOGGLE PENGINGAT
+    final isEnabled = await _preferenceService.isNotificationEnabled();
+    if (!isEnabled) {
+      print('⚠️ Notifikasi dinonaktifkan - Cancel semua notifikasi tugas');
+      await _notificationService.cancelAllTaskNotifications();
+      return;
+    }
     
     final allTugas = getAllTugas();
     int successCount = 0;
