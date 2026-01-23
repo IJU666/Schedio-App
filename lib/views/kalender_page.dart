@@ -21,6 +21,9 @@ class KalenderPage extends StatefulWidget {
   State<KalenderPage> createState() => _KalenderPageState();
 }
 
+const double timeColumnWidth = 40.0;
+const double dayColumnMargin = 1.0;
+
 class _KalenderPageState extends State<KalenderPage> {
   final JadwalController _jadwalController = JadwalController();
   final MataKuliahController _mataKuliahController = MataKuliahController();
@@ -29,6 +32,83 @@ class _KalenderPageState extends State<KalenderPage> {
   DateTime _focusedWeek = DateTime.now();
   DateTime _selectedDate = DateTime.now();
   final ScrollController _scrollController = ScrollController();
+
+  void _showDetailJadwal(Jadwal jadwal) {
+    final mataKuliah =
+        _mataKuliahController.getMataKuliahById(jadwal.mataKuliahId);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: const BoxDecoration(
+            color: Color(0xFF1E293B),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              Text(
+                mataKuliah?.nama ?? 'Mata Kuliah',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _detailRow("Hari", jadwal.hari),
+              _detailRow("Jam", "${jadwal.jamMulai} - ${jadwal.jamSelesai}"),
+              _detailRow("Ruang", jadwal.ruangan),
+              _detailRow("Dosen", mataKuliah?.dosen ?? 'N/A'),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 70,
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white54,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -133,7 +213,7 @@ class _KalenderPageState extends State<KalenderPage> {
     );
   }
 
-Widget _buildWeekHeader(
+  Widget _buildWeekHeader(
       List<DateTime> weekDays, bool isDarkMode, Color textColor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -174,34 +254,41 @@ Widget _buildWeekHeader(
           const SizedBox(height: 8),
           Row(
             children: [
-              const SizedBox(width: 10),
-              ...weekDays.map((date) {
-                return Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Column(
-                      children: [
-                        Text(
-                          date.day.toString(),
-                          style: TextStyle(
-                            color: textColor,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+              SizedBox(width: timeColumnWidth/2),
+              Expanded(
+                
+                  child: Row(
+                    children: List.generate(7, (index) {
+                      final date = weekDays[index];
+                      return Expanded(
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                date.day.toString(),
+                                style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _getShortDayName(date.weekday),
+                                style: TextStyle(
+                                  color: textColor.withOpacity(0.6),
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          _getShortDayName(date.weekday),
-                          style: TextStyle(
-                            color: textColor.withOpacity(0.6),
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    }),
                   ),
-                );
-              }).toList(),
+                ),
+              
             ],
           ),
         ],
@@ -240,7 +327,7 @@ Widget _buildWeekHeader(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
-                width: 40,
+                width: timeColumnWidth,
                 child: Padding(
                   padding: const EdgeInsets.only(top: 4, right: 8),
                   child: Text(
@@ -294,16 +381,41 @@ Widget _buildWeekHeader(
     final allJadwal = _jadwalController.getAllJadwal();
     return Positioned.fill(
       child: Padding(
-        padding: const EdgeInsets.only(left: 40),
+        padding: const EdgeInsets.only(left: timeColumnWidth),
         child: Row(
           children: weekDays.map((date) {
             final dayName = _getDayName(date.weekday);
             final jadwalForDay =
                 allJadwal.where((j) => j.hari == dayName).toList();
+            final conflictGroups = <List<Jadwal>>[];
+
+            for (final jadwal in jadwalForDay) {
+              bool added = false;
+              for (final group in conflictGroups) {
+                if (group.any((j) => _isOverlap(j, jadwal))) {
+                  group.add(jadwal);
+                  added = true;
+                  break;
+                }
+              }
+              if (!added) {
+                conflictGroups.add([jadwal]);
+              }
+            }
+
             return Expanded(
               child: Stack(
-                children: jadwalForDay.map((jadwal) {
-                  return _buildEventCard(jadwal);
+                children: conflictGroups.expand((group) {
+                  final total = group.length;
+                  return group.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final jadwal = entry.value;
+                    return _buildEventCard(
+                      jadwal,
+                      conflictIndex: index,
+                      conflictTotal: total,
+                    );
+                  });
                 }).toList(),
               ),
             );
@@ -313,7 +425,22 @@ Widget _buildWeekHeader(
     );
   }
 
-  Widget _buildEventCard(Jadwal jadwal) {
+  bool _isOverlap(Jadwal a, Jadwal b) {
+    int startA = _toMinutes(a.jamMulai);
+    int endA = _toMinutes(a.jamSelesai);
+    int startB = _toMinutes(b.jamMulai);
+    int endB = _toMinutes(b.jamSelesai);
+
+    return startA < endB && startB < endA;
+  }
+
+  int _toMinutes(String time) {
+    final parts = time.split(':');
+    return int.parse(parts[0]) * 60 + int.parse(parts[1]);
+  }
+
+  Widget _buildEventCard(Jadwal jadwal,
+      {required int conflictIndex, required int conflictTotal}) {
     final mataKuliah =
         _mataKuliahController.getMataKuliahById(jadwal.mataKuliahId);
     final startParts = jadwal.jamMulai.split(':');
@@ -335,100 +462,153 @@ Widget _buildWeekHeader(
       color = _hexToColor(mataKuliah.warna);
     }
 
-    // Dynamic font sizes berdasarkan tinggi
-    final titleFontSize = finalHeight < 60 ? 10.0 : 13.0;
-    final detailFontSize = finalHeight < 60 ? 9.0 : 11.0;
-    final iconSize = finalHeight < 60 ? 10.0 : 12.0;
-    final padding = finalHeight < 60 ? 4.0 : 8.0;
+    // Hitung lebar yang tersedia per kolom hari
+    final screenWidth = MediaQuery.of(context).size.width;
+    final timeColumnWidth = 40.0; // Lebar kolom waktu
+    final horizontalPadding = 0.0; // Padding horizontal dari Positioned.fill
+    final availableWidth =
+        (screenWidth - timeColumnWidth - horizontalPadding) / 7;
+
+    // Margin horizontal untuk setiap event
+    final horizontalMargin = 2.0;
+    final totalHorizontalMargin = horizontalMargin * 2;
+
+    // Hitung lebar event berdasarkan jumlah konflik
+    // TIDAK menggunakan minWidth agar semua event terlihat
+    final eventWidth = (availableWidth - totalHorizontalMargin) / conflictTotal;
+
+    // Offset kiri untuk event yang konflik
+    final leftOffset = conflictIndex * eventWidth;
+
+    // Dynamic font sizes berdasarkan tinggi dan lebar
+    final isVeryNarrow = eventWidth < 40;
+    final isExtremelyNarrow = eventWidth < 30;
+
+    final titleFontSize = isExtremelyNarrow
+        ? 8.0
+        : (isVeryNarrow ? 9.0 : (finalHeight < 60 ? 10.0 : 12.0));
+
+    final detailFontSize = isExtremelyNarrow
+        ? 7.0
+        : (isVeryNarrow ? 8.0 : (finalHeight < 60 ? 9.0 : 10.0));
+
+    final iconSize = isExtremelyNarrow
+        ? 8.0
+        : (isVeryNarrow ? 9.0 : (finalHeight < 60 ? 10.0 : 11.0));
+
+    final padding = isExtremelyNarrow ? 3.0 : (finalHeight < 60 ? 4.0 : 6.0);
 
     return Positioned(
       top: top,
-      left: 0,
-      right: 0,
+      left: leftOffset,
+      width: eventWidth,
       height: finalHeight,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.85),
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(8),
-            onTap: () {
-              // Handle tap
-            },
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: SingleChildScrollView(
-                physics: const NeverScrollableScrollPhysics(),
-                child: Padding(
-                  padding: EdgeInsets.all(padding),
-                  child: Column(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(6),
+        onTap: () {
+          _showDetailJadwal(jadwal);
+        },
+        child: Container(
+          margin:
+              EdgeInsets.symmetric(horizontal: horizontalMargin, vertical: 2),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.85),
+            borderRadius: BorderRadius.circular(6),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: Padding(
+              padding: EdgeInsets.all(padding),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final canShowTime =
+                      constraints.maxHeight >= 40 && constraints.maxWidth >= 35;
+                  final canShowRoom =
+                      constraints.maxHeight >= 65 && constraints.maxWidth >= 40;
+                  final showIconsOnly = constraints.maxWidth < 30;
+
+                  return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        mataKuliah?.nama ?? 'Mata Kuliah',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: titleFontSize,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: finalHeight < 60 ? 1 : 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (finalHeight >= 50)
-                        SizedBox(height: finalHeight < 60 ? 2 : 4),
-                      Row(
-                        children: [
-                          Icon(Icons.access_time,
-                              color: Colors.white70, size: iconSize),
-                          SizedBox(width: finalHeight < 60 ? 2 : 4),
-                          Flexible(
-                            child: Text(
-                              '${jadwal.jamMulai.substring(0, 5)} - ${jadwal.jamSelesai.substring(0, 5)}',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: detailFontSize,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                      // NAMA MATKUL (WAJIB)
+                      Flexible(
+                        child: Text(
+                          mataKuliah?.nama ?? 'MK',
+                          maxLines: canShowTime ? 2 : 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: titleFontSize,
+                            fontWeight: FontWeight.bold,
+                            height: 1.1,
                           ),
-                        ],
+                        ),
                       ),
-                      if (jadwal.ruangan.isNotEmpty && finalHeight >= 70) ...[
-                        const SizedBox(height: 4),
+
+                      if (canShowTime) ...[
+                        SizedBox(height: padding / 2),
                         Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.location_on,
-                                color: Colors.white70, size: iconSize),
-                            const SizedBox(width: 4),
-                            Expanded(
+                            if (!showIconsOnly) ...[
+                              Icon(Icons.access_time,
+                                  size: iconSize, color: Colors.white70),
+                              const SizedBox(width: 2),
+                            ],
+                            Flexible(
                               child: Text(
-                                jadwal.ruangan,
+                                showIconsOnly
+                                    ? jadwal.jamMulai.substring(0, 2)
+                                    : jadwal.jamMulai.substring(0, 5),
+                                maxLines: 1,
+                                overflow: TextOverflow.clip,
                                 style: TextStyle(
                                   color: Colors.white70,
                                   fontSize: detailFontSize,
+                                  height: 1.1,
                                 ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+
+                      if (canShowRoom && jadwal.ruangan.isNotEmpty) ...[
+                        SizedBox(height: padding / 2),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (!showIconsOnly) ...[
+                              Icon(Icons.location_on,
+                                  size: iconSize, color: Colors.white70),
+                              const SizedBox(width: 2),
+                            ],
+                            Flexible(
+                              child: Text(
+                                jadwal.ruangan,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: detailFontSize,
+                                  height: 1.1,
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ],
                     ],
-                  ),
-                ),
+                  );
+                },
               ),
             ),
           ),
