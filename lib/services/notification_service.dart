@@ -1,10 +1,16 @@
+// services/class_notification_service.dart
+// ========================================
+// CLASS NOTIFICATION SERVICE - CROSS PLATFORM
+// Menangani notifikasi pengingat jadwal kelas
+// ========================================
+
 import 'dart:ui';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
-import 'dart:io' show Platform;
+import 'dart:io';
 import 'package:hive/hive.dart';
 import '../models/jadwal.dart';
 import '../models/mata_kuliah.dart';
@@ -77,13 +83,16 @@ class ClassNotificationService {
   Future<void> scheduleAllNotificationsForClass(String jadwalId) async {
     if (!_initialized) await initialize();
 
+    // Skip untuk web
+    if (kIsWeb) {
+      print('⚠️ Notifications tidak tersedia di web');
+      return;
+    }
+
     // CEK TOGGLE PENGINGAT
     final isEnabled = await _preferenceService.isNotificationEnabled();
     if (!isEnabled) {
       print('⚠️ Notifikasi dinonaktifkan - Skip scheduling untuk $jadwalId');
-    // Skip untuk web
-    if (kIsWeb) {
-      print('⚠️ Notifications tidak tersedia di web');
       return;
     }
 
@@ -300,6 +309,6 @@ class ClassNotificationService {
     return true;
   }
   
-  // Helper method untuk cek apakah notifikasi tersedia
+  /// Helper method untuk cek apakah notifikasi tersedia
   bool get isSupported => !kIsWeb;
 }
