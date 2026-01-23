@@ -395,47 +395,52 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
                   children: [
                     GestureDetector(
                       onTap: () {
-                        setState(() {
-                          final allChecked = tugas.checklistStatus.every((status) => status);
-                          for (int i = 0; i < tugas.checklistStatus.length; i++) {
-                            _tugasController.updateChecklistStatus(
-                              tugas.id,
-                              i,
-                              !allChecked,
-                            );
-                          }
-                          
-                          if (!allChecked) {
-                            _scheduleTaskDeletion(tugas.id);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: const Text('Tugas akan dihapus dalam 5 menit'),
-                                duration: const Duration(seconds: 3),
-                                backgroundColor: borderColor,
-                                action: SnackBarAction(
-                                  label: 'BATAL',
-                                  textColor: Colors.white,
-                                  onPressed: () {
-                                    setState(() {
-                                      for (int i = 0; i < tugas.checklistStatus.length; i++) {
-                                        _tugasController.updateChecklistStatus(
-                                          tugas.id,
-                                          i,
-                                          false,
-                                        );
-                                      }
-                                    });
-                                    _pendingDeletions[tugas.id]?.cancel();
-                                    _pendingDeletions.remove(tugas.id);
-                                  },
-                                ),
+                        final allChecked = tugas.checklistStatus.every((status) => status);
+                        
+                        for (int i = 0; i < tugas.checklistStatus.length; i++) {
+                          _tugasController.updateChecklistStatus(
+                            tugas.id,
+                            i,
+                            !allChecked,
+                          );
+                        }
+                        
+                        if (!allChecked) {
+                          _scheduleTaskDeletion(tugas.id);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text('Tugas akan dihapus dalam 5 menit'),
+                              duration: const Duration(seconds: 3),
+                              backgroundColor: borderColor,
+                              action: SnackBarAction(
+                                label: 'BATAL',
+                                textColor: Colors.white,
+                                onPressed: () {
+                                  for (int i = 0; i < tugas.checklistStatus.length; i++) {
+                                    _tugasController.updateChecklistStatus(
+                                      tugas.id,
+                                      i,
+                                      false,
+                                    );
+                                  }
+                                  _pendingDeletions[tugas.id]?.cancel();
+                                  _pendingDeletions.remove(tugas.id);
+                                  
+                                  if (mounted) {
+                                    setState(() {});
+                                  }
+                                },
                               ),
-                            );
-                          } else {
-                            _pendingDeletions[tugas.id]?.cancel();
-                            _pendingDeletions.remove(tugas.id);
-                          }
-                        });
+                            ),
+                          );
+                        } else {
+                          _pendingDeletions[tugas.id]?.cancel();
+                          _pendingDeletions.remove(tugas.id);
+                        }
+                        
+                        if (mounted) {
+                          setState(() {});
+                        }
                       },
                       child: Container(
                         width: 20,
@@ -595,6 +600,39 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
                                     ),
                                   ),
                                 ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      
+                      // Badge Prioritas (jika ada)
+                      if (tugas.isPrioritas) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.priority_high,
+                              size: 16,
+                              color: const Color(0xFFFF6B6B),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFF6B6B).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: const Color(0xFFFF6B6B).withOpacity(0.3),
+                                ),
+                              ),
+                              child: const Text(
+                                'Tugas Prioritas',
+                                style: TextStyle(
+                                  color: Color(0xFFFF6B6B),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ],
