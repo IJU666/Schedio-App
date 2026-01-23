@@ -510,6 +510,14 @@ class _EditKelasPageState extends State<EditKelasPage> {
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
     final cardColor = Theme.of(context).cardColor;
     final textColor = Theme.of(context).colorScheme.onSurface;
+final screenWidth = MediaQuery.of(context).size.width;
+final screenHeight = MediaQuery.of(context).size.height;
+final textScale = MediaQuery.of(context).textScaleFactor;
+final isSmallScreen = screenHeight < 700;
+final timeFieldHeight = isSmallScreen ? 44.0 : 52.0;
+final fontSize = isSmallScreen ? 15.0 : 16.0;
+
+
 
     if (_jadwal == null) {
       return Scaffold(
@@ -585,21 +593,25 @@ class _EditKelasPageState extends State<EditKelasPage> {
                   child: GestureDetector(
                     onTap: () => _selectTime(context, true),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFF7AB8FF), width: 1),
-                      ),
-                      child: Text(
-                        '${_jamMulai.hour.toString().padLeft(2, '0')}.${_jamMulai.minute.toString().padLeft(2, '0')}',
-                        style: TextStyle(
-                          color: textColor,
-                          fontSize: 16,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
+  height: timeFieldHeight,
+  alignment: Alignment.center,
+  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+  decoration: BoxDecoration(
+    color: cardColor,
+    borderRadius: BorderRadius.circular(10),
+    border: Border.all(color: const Color(0xFF7AB8FF), width: 1),
+  ),
+  child: Text(
+    '${_jamMulai.hour.toString().padLeft(2, '0')}.${_jamMulai.minute.toString().padLeft(2, '0')}',
+    style: TextStyle(
+      color: textColor,
+      fontSize: fontSize,
+    ),
+    textAlign: TextAlign.center,
+  ),
+),
+
+
                   ),
                 ),
                 Padding(
@@ -613,49 +625,53 @@ class _EditKelasPageState extends State<EditKelasPage> {
                   child: GestureDetector(
                     onTap: () => _selectTime(context, false),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFF7AB8FF), width: 1),
-                      ),
-                      child: Text(
-                        '${_jamSelesai.hour.toString().padLeft(2, '0')}.${_jamSelesai.minute.toString().padLeft(2, '0')}',
-                        style: TextStyle(
-                          color: textColor,
-                          fontSize: 16,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
+  height: timeFieldHeight,
+  alignment: Alignment.center,
+  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+  decoration: BoxDecoration(
+    color: cardColor,
+    borderRadius: BorderRadius.circular(10),
+    border: Border.all(color: const Color(0xFF7AB8FF), width: 1),
+  ),
+  child: Text(
+    '${_jamSelesai.hour.toString().padLeft(2, '0')}.${_jamSelesai.minute.toString().padLeft(2, '0')}',
+    style: TextStyle(
+      color: textColor,
+      fontSize: fontSize,
+    ),
+    textAlign: TextAlign.center,
+  ),
+),
+
+
                   ),
                 ),
                 const SizedBox(width: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: cardColor,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: DropdownButton<String>(
-                    value: _selectedHari,
-                    dropdownColor: cardColor,
-                    underline: const SizedBox(),
-                    icon: Icon(Icons.arrow_drop_down, color: textColor),
-                    style: TextStyle(color: textColor),
-                    items: _hariList.map((String hari) {
-                      return DropdownMenuItem<String>(
-                        value: hari,
-                        child: Text(hari),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedHari = newValue!;
-                      });
-                    },
-                  ),
-                ),
+    Container(
+      height: 50,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedHari,
+          dropdownColor: cardColor,
+          icon: Icon(Icons.arrow_drop_down, color: textColor),
+          style: TextStyle(color: textColor),
+          items: _hariList.map((hari) {
+            return DropdownMenuItem(
+              value: hari,
+              child: Text(hari),
+            );
+          }).toList(),
+          onChanged: (val) {
+            setState(() => _selectedHari = val!);
+          },
+        ),
+      ),
+    ),
               ],
             ),
             const SizedBox(height: 25),

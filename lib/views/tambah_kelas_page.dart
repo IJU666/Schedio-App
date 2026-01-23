@@ -530,84 +530,98 @@ class _TambahKelasPageState extends State<TambahKelasPage> {
             ),
             const SizedBox(height: 10),
             Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _selectTime(context, true),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFF7AB8FF), width: 1),
-                      ),
-                      child: Text(
-                        '${_jamMulai.hour.toString().padLeft(2, '0')}.${_jamMulai.minute.toString().padLeft(2, '0')}',
-                        style: TextStyle(
-                          color: textColor,
-                          fontSize: 16,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  child: Text(
-                    '—',
-                    style: TextStyle(color: textColor, fontSize: 20),
-                  ),
-                ),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _selectTime(context, false),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFF7AB8FF), width: 1),
-                      ),
-                      child: Text(
-                        '${_jamSelesai.hour.toString().padLeft(2, '0')}.${_jamSelesai.minute.toString().padLeft(2, '0')}',
-                        style: TextStyle(
-                          color: textColor,
-                          fontSize: 16,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: cardColor,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: DropdownButton<String>(
-                    value: _selectedHari,
-                    dropdownColor: cardColor,
-                    underline: const SizedBox(),
-                    icon: Icon(Icons.arrow_drop_down, color: textColor),
-                    style: TextStyle(color: textColor),
-                    items: _hariList.map((String hari) {
-                      return DropdownMenuItem<String>(
-                        value: hari,
-                        child: Text(hari),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedHari = newValue!;
-                      });
-                    },
-                  ),
-                ),
-              ],
+  children: [
+    // JAM MULAI
+    Expanded(
+      child: GestureDetector(
+        onTap: () => _selectTime(context, true),
+        child: Container(
+          height: 50,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF7AB8FF), width: 1),
+          ),
+          child: Text(
+            '${_jamMulai.hour.toString().padLeft(2, '0')}.${_jamMulai.minute.toString().padLeft(2, '0')}',
+            style: TextStyle(
+              color: textColor,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
             ),
+          ),
+        ),
+      ),
+    ),
+
+    Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Text(
+        '—',
+        style: TextStyle(
+          color: textColor,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+
+    // JAM SELESAI
+    Expanded(
+      child: GestureDetector(
+        onTap: () => _selectTime(context, false),
+        child: Container(
+          height: 50,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF7AB8FF), width: 1),
+          ),
+          child: Text(
+            '${_jamSelesai.hour.toString().padLeft(2, '0')}.${_jamSelesai.minute.toString().padLeft(2, '0')}',
+            style: TextStyle(
+              color: textColor,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    ),
+
+    const SizedBox(width: 10),
+
+    // DROPDOWN HARI (tetap)
+    Container(
+      height: 50,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedHari,
+          dropdownColor: cardColor,
+          icon: Icon(Icons.arrow_drop_down, color: textColor),
+          style: TextStyle(color: textColor),
+          items: _hariList.map((hari) {
+            return DropdownMenuItem(
+              value: hari,
+              child: Text(hari),
+            );
+          }).toList(),
+          onChanged: (val) {
+            setState(() => _selectedHari = val!);
+          },
+        ),
+      ),
+    ),
+  ],
+),
+
             const SizedBox(height: 25),
             Text(
               'Warna',
