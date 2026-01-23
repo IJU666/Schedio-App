@@ -444,7 +444,7 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Tugas berhasil ditambahkan dengan notifikasi!'),
+            content: Text('Tugas berhasil ditambahkan!'),
             backgroundColor: Color(0xFF4ECCA3),
             duration: Duration(seconds: 2),
           ),

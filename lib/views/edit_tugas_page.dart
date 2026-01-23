@@ -447,7 +447,7 @@ class _EditTugasPageState extends State<EditTugasPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Tugas berhasil diupdate dengan notifikasi!'),
+            content: Text('Tugas berhasil diupdate!'),
             backgroundColor: Color(0xFF4ECCA3),
             duration: Duration(seconds: 2),
           ),
