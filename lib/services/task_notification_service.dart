@@ -12,7 +12,6 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import 'notification_preference_service.dart';
-import 'dart:io' show Platform;
 
 class TaskNotificationService {
   static final TaskNotificationService _instance = TaskNotificationService._();
@@ -92,13 +91,16 @@ class TaskNotificationService {
   }) async {
     if (!_initialized) await initialize();
 
+    // Skip untuk web
+    if (kIsWeb) {
+      print('⚠️ Task notifications tidak tersedia di web');
+      return;
+    }
+
     // CEK TOGGLE PENGINGAT
     final isEnabled = await _preferenceService.isNotificationEnabled();
     if (!isEnabled) {
       print('⚠️ Notifikasi dinonaktifkan - Skip scheduling untuk $taskId');
-    // Skip untuk web
-    if (kIsWeb) {
-      print('⚠️ Task notifications tidak tersedia di web');
       return;
     }
 
