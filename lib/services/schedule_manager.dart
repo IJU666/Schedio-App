@@ -36,7 +36,7 @@ class ScheduleManager {
   Future<void> resyncAllNotifications() async {
     print('🔄 Menyinkronkan ulang semua notifikasi kelas...');
     
-    // CEK TOGGLE PENGINGAT
+    
     final isEnabled = await _preferenceService.isNotificationEnabled();
     if (!isEnabled) {
       print('⚠️ Notifikasi dinonaktifkan - Cancel semua notifikasi kelas');
