@@ -48,7 +48,7 @@ class NavigationController extends ChangeNotifier {
   }
   
   void navigateToIndex(BuildContext context, int index) {
-    if (index == 2) return; // Skip FAB
+    if (index == 2) return; 
     
     setIndex(index);
     

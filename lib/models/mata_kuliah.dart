@@ -23,7 +23,7 @@ class MataKuliah extends HiveObject {
   String dosen;
 
   @HiveField(6)
-  String warna; // Hex color code
+  String warna; 
 
   MataKuliah({
     required this.id,
@@ -32,6 +32,6 @@ class MataKuliah extends HiveObject {
     required this.ruangan,
     required this.sks,
     required this.dosen,
-    this.warna = '#7AB8FF', // Default color
+    this.warna = '#7AB8FF', 
   });
 }

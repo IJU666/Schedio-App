@@ -1,8 +1,3 @@
-// controllers/theme_controller.dart
-// ========================================
-// THEME CONTROLLER - DARK/LIGHT MODE
-// ========================================
-
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
@@ -10,7 +5,7 @@ class ThemeController extends ChangeNotifier {
   static const String _themeBoxName = 'themeBox';
   static const String _themeModeKey = 'themeMode';
   
-  ThemeMode _themeMode = ThemeMode.dark; // Default: Dark Mode
+  ThemeMode _themeMode = ThemeMode.dark;
   
   ThemeMode get themeMode => _themeMode;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
@@ -19,7 +14,7 @@ class ThemeController extends ChangeNotifier {
     _loadThemeMode();
   }
 
-  // Load theme dari Hive
+
   Future<void> _loadThemeMode() async {
     final box = await Hive.openBox(_themeBoxName);
     final savedMode = box.get(_themeModeKey, defaultValue: 'dark');
@@ -27,7 +22,7 @@ class ThemeController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Toggle theme dan simpan ke Hive
+
   Future<void> toggleTheme() async {
     _themeMode = _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     
@@ -37,7 +32,6 @@ class ThemeController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Set theme mode secara manual
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
     
@@ -47,7 +41,6 @@ class ThemeController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Theme Data untuk Dark Mode
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,
@@ -78,7 +71,6 @@ class ThemeController extends ChangeNotifier {
     );
   }
 
-  // Theme Data untuk Light Mode
   static ThemeData get lightTheme {
     return ThemeData(
       brightness: Brightness.light,

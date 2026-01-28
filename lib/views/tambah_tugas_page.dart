@@ -1,8 +1,3 @@
-// views/tambah_tugas_page.dart
-// ========================================
-// TAMBAH TUGAS PAGE - DENGAN NOTIFIKASI OTOMATIS
-// ========================================
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../controllers/tugas_controller.dart';
@@ -14,7 +9,7 @@ class TambahTugasPage extends StatefulWidget {
 final String? preselectedMataKuliahId;
   const TambahTugasPage({
     super.key,
-    this.preselectedMataKuliahId, // Tambahkan ini
+    this.preselectedMataKuliahId, 
   });
   
 
@@ -42,7 +37,7 @@ class _TambahTugasPageState extends State<TambahTugasPage> {
 void initState() {
   super.initState();
   
-  // Autofill mata kuliah jika ada preselectedMataKuliahId
+ 
   if (widget.preselectedMataKuliahId != null) {
     _selectedMataKuliah = _mataKuliahController
         .getMataKuliahById(widget.preselectedMataKuliahId!);
@@ -52,7 +47,7 @@ void initState() {
   Future<void> _selectDateTime(BuildContext context) async {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
-    // Pilih tanggal
+ 
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: _selectedDateTime,
@@ -75,7 +70,8 @@ void initState() {
     );
 
     if (pickedDate != null) {
-      // Pilih waktu dengan format 24 jam dan mode input
+    
+  
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
@@ -330,7 +326,7 @@ void initState() {
               ),
             ),
             const SizedBox(height: 20),
-            // Info notifikasi otomatis
+
             Container(
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
@@ -453,7 +449,6 @@ void initState() {
         checklistStatus: [true, true, false],
       );
 
-      // Simpan tugas dan schedule notifikasi otomatis
       await _tugasController.addTugas(tugas);
 
       if (mounted) {
