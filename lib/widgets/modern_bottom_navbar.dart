@@ -49,7 +49,6 @@ class _ModernBottomNavbarState extends State<ModernBottomNavbar>
 
   @override
   Widget build(BuildContext context) {
-    // ⭐ Deteksi theme mode dari context
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     return SizedBox(
@@ -57,7 +56,6 @@ class _ModernBottomNavbarState extends State<ModernBottomNavbar>
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Background with gradient - ⭐ RESPONSIVE TO THEME
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -66,12 +64,10 @@ class _ModernBottomNavbarState extends State<ModernBottomNavbar>
                   end: Alignment.bottomCenter,
                   colors: isDarkMode
                       ? [
-                          // Dark mode: gradient gelap
                           const Color(0xFF2A3947).withOpacity(0.95),
                           const Color(0xFF1E2936),
                         ]
                       : [
-                          // Light mode: gradient terang
                           Colors.white.withOpacity(0.98),
                           const Color(0xFFF8F9FA),
                         ],
@@ -93,7 +89,6 @@ class _ModernBottomNavbarState extends State<ModernBottomNavbar>
             ),
           ),
           
-          // Navigation Items
           Positioned.fill(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -114,7 +109,6 @@ class _ModernBottomNavbarState extends State<ModernBottomNavbar>
             ),
           ),
           
-          // Floating Action Button with animation
           Positioned(
             top: -25,
             left: 0,
@@ -173,7 +167,6 @@ class _ModernBottomNavbarState extends State<ModernBottomNavbar>
     );
   }
 
-  // ⭐ Tambahkan parameter isDarkMode
   Widget _buildNavItem(NavigationItem item, int index, bool isDarkMode) {
     final isSelected = widget.currentIndex == index;
     
@@ -214,7 +207,6 @@ class _ModernBottomNavbarState extends State<ModernBottomNavbar>
                     ),
                     const SizedBox(height: 4),
                     
-                    // Icon with animation - ⭐ RESPONSIVE TO THEME
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       padding: EdgeInsets.all(isSelected ? 4 : 0),
@@ -235,7 +227,6 @@ class _ModernBottomNavbarState extends State<ModernBottomNavbar>
                     
                     const SizedBox(height: 4),
                     
-                    // Label with fade - ⭐ RESPONSIVE TO THEME
                     Text(
                       item.label,
                       style: TextStyle(
