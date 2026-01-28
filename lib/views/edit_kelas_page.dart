@@ -27,7 +27,7 @@ class _EditKelasPageState extends State<EditKelasPage> {
   late String _selectedHari;
   late Color _selectedColor;
 
-  // Batasan karakter untuk setiap field
+  
   static const int maxNamaLength = 25;
   static const int maxRuanganLength = 20;
   static const int maxDosenLength = 30;
@@ -139,7 +139,7 @@ class _EditKelasPageState extends State<EditKelasPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // JAM
+                      
                       Column(
                         children: [
                           Container(
@@ -254,7 +254,7 @@ class _EditKelasPageState extends State<EditKelasPage> {
                         ),
                       ),
                       
-                      // MENIT
+                      
                       Column(
                         children: [
                           Container(
@@ -782,14 +782,14 @@ final fontSize = isSmallScreen ? 15.0 : 16.0;
             LengthLimitingTextInputFormatter(maxLength),
           ],
           onChanged: (value) {
-            setState(() {}); // Update counter
+            setState(() {}); 
           },
           decoration: InputDecoration(
             hintText: placeholder,
             hintStyle: TextStyle(color: isDarkMode ? Colors.grey[600] : Colors.grey[500]),
             filled: true,
             fillColor: cardColor,
-            counterText: '', // Hide default counter
+            counterText: '', 
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide.none,
