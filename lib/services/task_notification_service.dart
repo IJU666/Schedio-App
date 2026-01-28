@@ -1,8 +1,4 @@
-// services/task_notification_service.dart
-// ========================================
-// TASK NOTIFICATION SERVICE - CROSS PLATFORM
-// Menangani notifikasi pengingat deadline tugas
-// ========================================
+
 
 import 'dart:ui';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -24,11 +20,11 @@ class TaskNotificationService {
 
   bool _initialized = false;
 
-  /// Inisialisasi service notifikasi
+ 
   Future<void> initialize() async {
     if (_initialized) return;
 
-    // Skip initialization untuk web
+    
     if (kIsWeb) {
       print('⚠️ Task notifications tidak didukung di web browser');
       _initialized = true;
@@ -64,7 +60,7 @@ class TaskNotificationService {
     print('✅ TaskNotificationService initialized');
   }
 
-  /// Request permissions untuk Android 13+
+  
   Future<bool> _requestPermissions() async {
     if (kIsWeb) return false;
     
@@ -76,13 +72,12 @@ class TaskNotificationService {
     return true;
   }
 
-  /// Handler saat notifikasi ditap
+  
   void _onNotificationTap(NotificationResponse response) {
     print('📱 Notifikasi tugas ditap: ${response.payload}');
   }
 
-  /// Schedule semua notifikasi untuk satu tugas
-  /// 4 notifikasi: 1 hari, 5 jam, 1 jam, 30 menit sebelum deadline
+
   Future<void> scheduleTaskNotifications({
     required String taskId,
     required String taskTitle,
@@ -91,13 +86,13 @@ class TaskNotificationService {
   }) async {
     if (!_initialized) await initialize();
 
-    // Skip untuk web
+    
     if (kIsWeb) {
       print('⚠️ Task notifications tidak tersedia di web');
       return;
     }
 
-    // CEK TOGGLE PENGINGAT
+    
     final isEnabled = await _preferenceService.isNotificationEnabled();
     if (!isEnabled) {
       print('⚠️ Notifikasi dinonaktifkan - Skip scheduling untuk $taskId');
@@ -105,19 +100,19 @@ class TaskNotificationService {
     }
 
     try {
-      // Cancel notifikasi lama jika ada
+      
       await cancelTaskNotifications(taskId);
 
       final now = tz.TZDateTime.now(tz.local);
       final deadlineTime = tz.TZDateTime.from(deadline, tz.local);
 
-      // Jika deadline sudah lewat, tidak schedule notifikasi
+      
       if (deadlineTime.isBefore(now)) {
         print('⚠️ Deadline sudah lewat untuk tugas: $taskTitle');
         return;
       }
 
-      // Daftar jadwal notifikasi
+      
       final notificationSchedules = [
         {
           'offset': const Duration(days: 1),
@@ -150,7 +145,7 @@ class TaskNotificationService {
       for (var schedule in notificationSchedules) {
         final notificationTime = deadlineTime.subtract(schedule['offset'] as Duration);
 
-        // Hanya schedule jika waktu notifikasi masih di masa depan
+        
         if (notificationTime.isAfter(now)) {
           final notificationId = _generateNotificationId(taskId, schedule['id'] as int);
 
@@ -179,13 +174,13 @@ class TaskNotificationService {
     }
   }
 
-  /// Generate unique notification ID dari task ID dan schedule index
+  
   int _generateNotificationId(String taskId, int scheduleIndex) {
-    // Menggunakan hash code untuk ID unik, tambahkan offset 10000 untuk membedakan dari class notifications
+    
     return ((taskId.hashCode & 0x7FFFFFFF) % 1000000) + (scheduleIndex * 1000000) + 10000;
   }
 
-  /// Notification details untuk Android
+  
   NotificationDetails _notificationDetails() {
     const androidDetails = AndroidNotificationDetails(
       'task_deadline_channel',
@@ -213,7 +208,7 @@ class TaskNotificationService {
     );
   }
 
-  /// Cancel semua notifikasi untuk satu tugas
+  
   Future<void> cancelTaskNotifications(String taskId) async {
     if (kIsWeb) return;
     
@@ -224,7 +219,7 @@ class TaskNotificationService {
     print('🗑️ Notifikasi dibatalkan untuk task: $taskId');
   }
 
-  /// Cancel semua notifikasi tugas
+  
   Future<void> cancelAllTaskNotifications() async {
     if (kIsWeb) return;
     
@@ -232,14 +227,14 @@ class TaskNotificationService {
     print('🗑️ Semua notifikasi tugas dibatalkan');
   }
 
-  /// Get daftar notifikasi yang pending
+  
   Future<List<PendingNotificationRequest>> getPendingNotifications() async {
     if (kIsWeb) return [];
     
     return await _flutterLocalNotificationsPlugin.pendingNotificationRequests();
   }
 
-  /// Show test notification
+  
   Future<void> showTestNotification() async {
     if (!_initialized) await initialize();
 
@@ -256,7 +251,7 @@ class TaskNotificationService {
     );
   }
 
-  /// Check permissions
+  
   Future<bool> checkPermissions() async {
     if (kIsWeb) return false;
     
@@ -268,6 +263,6 @@ class TaskNotificationService {
     return true;
   }
   
-  /// Helper method untuk cek apakah notifikasi tersedia
+  
   bool get isSupported => !kIsWeb;
 }

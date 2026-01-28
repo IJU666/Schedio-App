@@ -1,8 +1,4 @@
-// services/class_notification_service.dart
-// ========================================
-// CLASS NOTIFICATION SERVICE - CROSS PLATFORM
-// Menangani notifikasi pengingat jadwal kelas
-// ========================================
+
 
 import 'dart:ui';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -30,7 +26,7 @@ class ClassNotificationService {
   Future<void> initialize() async {
     if (_initialized) return;
 
-    // Skip initialization untuk web
+    
     if (kIsWeb) {
       print('⚠️ Notifications tidak didukung di web browser');
       _initialized = true;
@@ -58,7 +54,7 @@ class ClassNotificationService {
       onDidReceiveNotificationResponse: _onNotificationTap,
     );
 
-    // PENTING: Buat notification channel untuk Android dengan vibration dan sound
+    
     if (Platform.isAndroid) {
       await _createNotificationChannel();
       await _requestPermissions();
@@ -67,11 +63,11 @@ class ClassNotificationService {
     _initialized = true;
   }
 
-  /// Membuat notification channel dengan vibration dan sound
+  
   Future<void> _createNotificationChannel() async {
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'class_reminder_channel', // ID channel
-      'Pengingat Jadwal Kelas', // Nama channel
+      'class_reminder_channel', 
+      'Pengingat Jadwal Kelas', 
       description: 'Notifikasi pengingat jadwal kelas kuliah',
       importance: Importance.high,
       playSound: true,
@@ -106,13 +102,13 @@ class ClassNotificationService {
   Future<void> scheduleAllNotificationsForClass(String jadwalId) async {
     if (!_initialized) await initialize();
 
-    // Skip untuk web
+    
     if (kIsWeb) {
       print('⚠️ Notifications tidak tersedia di web');
       return;
     }
 
-    // CEK TOGGLE PENGINGAT
+    
     final isEnabled = await _preferenceService.isNotificationEnabled();
     if (!isEnabled) {
       print('⚠️ Notifikasi dinonaktifkan - Skip scheduling untuk $jadwalId');
@@ -263,11 +259,11 @@ class ClassNotificationService {
       importance: Importance.high,
       priority: Priority.high,
       showWhen: true,
-      // VIBRASI AKTIF
+      
       enableVibration: true,
-      // SUARA AKTIF
+      
       playSound: true,
-      // PENGATURAN TAMBAHAN
+      
       enableLights: true,
       ledColor: const Color(0xFF7AB8FF),
       ledOnMs: 1000,
@@ -277,12 +273,11 @@ class ClassNotificationService {
       styleInformation: const BigTextStyleInformation(''),
       showProgress: false,
       maxProgress: 0,
-      onlyAlertOnce: false, // Pastikan vibrasi dan suara muncul setiap kali
-      autoCancel: true,
+      onlyAlertOnce: false, 
       ongoing: false,
       ticker: 'Pengingat Kelas',
       channelShowBadge: true,
-      // FULL SCREEN INTENT untuk notifikasi penting (opsional)
+      
       fullScreenIntent: false,
     );
 
@@ -290,7 +285,7 @@ class ClassNotificationService {
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
-      sound: 'default', // iOS menggunakan default sound
+      sound: 'default', 
     );
 
     return NotificationDetails(
@@ -349,6 +344,6 @@ class ClassNotificationService {
     return true;
   }
   
-  /// Helper method untuk cek apakah notifikasi tersedia
+  
   bool get isSupported => !kIsWeb;
 }
