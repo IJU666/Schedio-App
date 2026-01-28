@@ -1,8 +1,3 @@
-// views/daftar_tugas_page.dart
-// ========================================
-// DAFTAR TUGAS PAGE - DENGAN DROPDOWN
-// ========================================
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
@@ -274,7 +269,6 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
     }
   }
 
-  // UPDATED: Card dengan Dropdown
   Widget _buildTugasCard(Tugas tugas, bool isDarkMode, Color cardColor, Color textColor) {
     final mataKuliah = _mataKuliahController.getMataKuliahById(tugas.mataKuliahId);
     Color borderColor = const Color(0xFF7AB8FF);
@@ -388,7 +382,6 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
                 ),
               ),
               
-              // CHECKLIST SECTION
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: Row(
@@ -486,7 +479,6 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
               
               const SizedBox(height: 8),
               
-              // TIME SECTION
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
@@ -567,7 +559,6 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
                         ],
                       ),
                       
-                      // Keterangan (jika ada)
                       if (tugas.keterangan != null && tugas.keterangan!.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         Row(
@@ -606,7 +597,6 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
                         ),
                       ],
                       
-                      // Badge Prioritas (jika ada)
                       if (tugas.isPrioritas) ...[
                         const SizedBox(height: 12),
                         Row(

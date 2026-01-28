@@ -1,8 +1,3 @@
-// views/pengaturan_page.dart
-// ========================================
-// PENGATURAN PAGE - DENGAN DYNAMIC DATA DARI DATABASE
-// ========================================
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/theme_controller.dart';
@@ -54,13 +49,11 @@ class _PengaturanPageState extends State<PengaturanPage> {
   }
 
   void _loadCourses() {
-    // Ambil semua mata kuliah dan jadwal dari controller
     final allMataKuliah = _mataKuliahController.getAllMataKuliah();
     final allJadwal = _jadwalController.getAllJadwal();
     
     setState(() {
       courses = allMataKuliah.map((mataKuliah) {
-        // Cari jadwal yang sesuai dengan mata kuliah ini
         final jadwal = allJadwal.firstWhere(
           (j) => j.mataKuliahId == mataKuliah.id,
           orElse: () => Jadwal(
@@ -104,7 +97,6 @@ class _PengaturanPageState extends State<PengaturanPage> {
       ),
     );
     
-    // Reload courses jika ada perubahan
     if (result == true) {
       _loadCourses();
     }
@@ -116,7 +108,6 @@ class _PengaturanPageState extends State<PengaturanPage> {
       MaterialPageRoute(builder: (context) => const TambahKelasPage()),
     );
     
-    // Reload courses setelah menambah kelas baru
     if (result == true || result == null) {
       _loadCourses();
     }
@@ -127,12 +118,9 @@ class _PengaturanPageState extends State<PengaturanPage> {
       isPengingatEnabled = value;
     });
 
-    // Simpan preference
     await _preferenceService.setNotificationEnabled(value);
 
-    // Resync semua notifikasi (kelas dan tugas)
     if (value) {
-      // Aktifkan: Schedule ulang semua notifikasi
       await _scheduleManager.resyncAllNotifications();
       await _tugasController.resyncAllTaskNotifications();
       
@@ -146,9 +134,8 @@ class _PengaturanPageState extends State<PengaturanPage> {
         );
       }
     } else {
-      // Nonaktifkan: Cancel semua notifikasi
-      await _scheduleManager.resyncAllNotifications(); // Akan cancel semua karena toggle off
-      await _tugasController.resyncAllTaskNotifications(); // Akan cancel semua karena toggle off
+      await _scheduleManager.resyncAllNotifications(); 
+      await _tugasController.resyncAllTaskNotifications(); 
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -178,7 +165,6 @@ class _PengaturanPageState extends State<PengaturanPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
                 Text(
                   'Pengaturan',
                   style: TextStyle(
@@ -189,7 +175,6 @@ class _PengaturanPageState extends State<PengaturanPage> {
                 ),
                 const SizedBox(height: 32),
                 
-                // Pengaturan Kelas Section
                 Text(
                   'Pengaturan Kelas',
                   style: TextStyle(
@@ -200,7 +185,6 @@ class _PengaturanPageState extends State<PengaturanPage> {
                 ),
                 const SizedBox(height: 16),
                 
-                // Course List - Dynamic from Database
                 if (courses.isEmpty)
                   Container(
                     padding: const EdgeInsets.all(24),
@@ -254,7 +238,6 @@ class _PengaturanPageState extends State<PengaturanPage> {
                 
                 const SizedBox(height: 24),
                 
-                // Pengingat Toggle
                 if (_isLoadingPreference)
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -306,7 +289,6 @@ class _PengaturanPageState extends State<PengaturanPage> {
                   ),
                 const SizedBox(height: 8),
                 
-                // Dark Mode Toggle
                 Consumer<ThemeController>(
                   builder: (context, themeController, child) {
                     return AnimatedContainer(
@@ -354,7 +336,6 @@ class _PengaturanPageState extends State<PengaturanPage> {
         ),
       ),
       
-      // Modern Bottom Navbar
       bottomNavigationBar: ModernBottomNavbar(
         controller: _navigationController,
         currentIndex: 4,
@@ -390,7 +371,6 @@ class _PengaturanPageState extends State<PengaturanPage> {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              // Color indicator - Warna dari input user
               Container(
                 width: 4,
                 height: 40,
@@ -400,7 +380,6 @@ class _PengaturanPageState extends State<PengaturanPage> {
                 ),
               ),
               const SizedBox(width: 12),
-              // Course name - Nama dari input user
               Expanded(
                 child: Text(
                   course.name,
@@ -411,7 +390,6 @@ class _PengaturanPageState extends State<PengaturanPage> {
                   ),
                 ),
               ),
-              // Edit button
               Row(
                 children: [
                   Text(

@@ -1,8 +1,3 @@
-// views/splash_screen.dart
-// ========================================
-// ENHANCED SPLASH SCREEN - DENGAN ANIMASI & CUSTOM LOGO
-// ========================================
-
 import 'package:flutter/material.dart';
 import 'home_page.dart';
 
@@ -29,25 +24,21 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     
-    // Controller untuk icon
     _iconController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
     
-    // Controller untuk text
     _textController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
     
-    // Controller untuk background
     _backgroundController = AnimationController(
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
 
-    // Icon scale animation
     _iconScaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _iconController,
@@ -55,7 +46,6 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    // Icon rotation animation (subtle)
     _iconRotationAnimation = Tween<double>(begin: -0.1, end: 0.0).animate(
       CurvedAnimation(
         parent: _iconController,
@@ -63,7 +53,6 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    // Text fade animation
     _textFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _textController,
@@ -71,7 +60,6 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    // Text slide animation
     _textSlideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.5),
       end: Offset.zero,
@@ -82,7 +70,6 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    // Background pulse animation
     _backgroundAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _backgroundController,
@@ -90,10 +77,8 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    // Start animations
     _startAnimations();
 
-    // Navigate to home after delay
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
         Navigator.pushReplacement(
@@ -135,7 +120,6 @@ class _SplashScreenState extends State<SplashScreen>
       backgroundColor: const Color(0xFF1E2936),
       body: Stack(
         children: [
-          // Animated background circles
           AnimatedBuilder(
             animation: _backgroundAnimation,
             builder: (context, child) {
@@ -174,13 +158,11 @@ class _SplashScreenState extends State<SplashScreen>
               );
             },
           ),
-          
-          // Main content with CUSTOM LOGO
+
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Animated Custom Logo - Path diperbaiki ke assets/icon/app_icon.png
                 AnimatedBuilder(
                   animation: _iconController,
                   builder: (context, child) {
@@ -194,7 +176,6 @@ class _SplashScreenState extends State<SplashScreen>
                           height: 140,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) {
-                            // Fallback jika logo tidak ditemukan
                             return Container(
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
@@ -223,7 +204,6 @@ class _SplashScreenState extends State<SplashScreen>
                 
                 const SizedBox(height: 30),
                 
-                // Animated Text
                 FadeTransition(
                   opacity: _textFadeAnimation,
                   child: SlideTransition(
@@ -240,7 +220,6 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                 ),
                 
-                // Animated loading indicator
                 const SizedBox(height: 50),
                 FadeTransition(
                   opacity: _textFadeAnimation,
