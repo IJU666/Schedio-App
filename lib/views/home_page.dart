@@ -1,8 +1,3 @@
-// views/home_page.dart
-// ========================================
-// HOME PAGE - DENGAN DROPDOWN TUGAS
-// ========================================
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
@@ -158,7 +153,7 @@ class _HomePageState extends State<HomePage> {
                   });
                 },
                 child: SizedBox(
-                  height: 80, // 🔑 samakan tinggi semua hari
+                  height: 80, 
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 2),
                     padding: const EdgeInsets.symmetric(vertical: 2),
@@ -188,7 +183,7 @@ class _HomePageState extends State<HomePage> {
                         tugasCount > 0
                             ? _buildBadge(tugasCount)
                             : const SizedBox(
-                                height: 18), // 🔑 spacer pengganti badge
+                                height: 18), 
                       ],
                     ),
                   ),
@@ -428,7 +423,7 @@ class _HomePageState extends State<HomePage> {
                             MaterialPageRoute(
                               builder: (context) => TambahTugasPage(
                                 preselectedMataKuliahId:
-                                    jadwal.mataKuliahId, // Kirim ID mata kuliah
+                                    jadwal.mataKuliahId, 
                               ),
                             ),
                           ).then((_) => setState(() {}));
@@ -454,7 +449,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // UPDATED: Card Tugas dengan Dropdown
+
   Widget _buildTugasCard(
       Tugas tugas, bool isDarkMode, Color cardColor, Color textColor) {
     bool isExpanded = false;
@@ -489,7 +484,7 @@ class _HomePageState extends State<HomePage> {
           ),
           child: Column(
             children: [
-              // HEADER - Clickable untuk expand/collapse
+
               InkWell(
                 onTap: () {
                   setCardState(() {
@@ -513,7 +508,7 @@ class _HomePageState extends State<HomePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Badge TELAT dan Nama Mata Kuliah
+                            
                             Row(
                               children: [
                                 if (isLate)
@@ -553,7 +548,7 @@ class _HomePageState extends State<HomePage> {
                               ],
                             ),
                             const SizedBox(height: 8),
-                            // Judul Tugas
+                            
                             Text(
                               tugas.judul,
                               style: TextStyle(
@@ -566,7 +561,7 @@ class _HomePageState extends State<HomePage> {
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 12),
-                            // Label "Tugas" dengan badge prioritas
+                            
                             Row(
                               children: [
                                 Text(
@@ -611,7 +606,7 @@ class _HomePageState extends State<HomePage> {
                           size: 22,
                         ),
                         onPressed: () {
-                          // Navigate ke edit page
+                          
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -626,7 +621,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              // EXPANDED CONTENT - Detail Tugas
+              
               if (isExpanded)
                 Container(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -636,7 +631,7 @@ class _HomePageState extends State<HomePage> {
                       Divider(
                           color: isDarkMode ? Colors.grey : Colors.grey[300]),
                       const SizedBox(height: 15),
-                      // Waktu Tenggat
+                      
                       Row(
                         children: [
                           Icon(
@@ -691,7 +686,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ],
                       ),
-                      // Keterangan (jika ada)
+                      
                       if (tugas.keterangan != null &&
                           tugas.keterangan!.isNotEmpty) ...[
                         const SizedBox(height: 15),
@@ -735,7 +730,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ],
                       const SizedBox(height: 15),
-                      // Tombol Hapus
+                      
                       _buildDropdownButton(
                         icon: Icons.delete,
                         label: 'Hapus Tugas',

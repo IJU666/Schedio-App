@@ -1,8 +1,3 @@
-// views/edit_tugas_page.dart
-// ========================================
-// EDIT TUGAS PAGE - DENGAN UPDATE/CANCEL NOTIFIKASI
-// ========================================
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../controllers/tugas_controller.dart';
@@ -49,7 +44,7 @@ class _EditTugasPageState extends State<EditTugasPage> {
   Future<void> _selectDateTime(BuildContext context) async {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
-    // Pilih tanggal
+
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: _selectedDateTime,
@@ -72,7 +67,7 @@ class _EditTugasPageState extends State<EditTugasPage> {
     );
 
     if (pickedDate != null) {
-      // Pilih waktu dengan format 24 jam dan mode input
+
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
@@ -325,7 +320,7 @@ class _EditTugasPageState extends State<EditTugasPage> {
               ),
             ),
             const SizedBox(height: 20),
-            // Info notifikasi otomatis
+  
             Container(
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
@@ -441,7 +436,7 @@ class _EditTugasPageState extends State<EditTugasPage> {
       widget.tugas.isPrioritas = _isPrioritas;
       widget.tugas.tanggal = _selectedDateTime;
 
-      // Update tugas dan reschedule notifikasi otomatis
+      
       await _tugasController.updateTugas(widget.tugas);
 
       if (mounted) {
@@ -498,12 +493,12 @@ class _EditTugasPageState extends State<EditTugasPage> {
           ),
           TextButton(
             onPressed: () async {
-              // Hapus tugas dan cancel notifikasi otomatis
+            
               await _tugasController.deleteTugas(widget.tugas.id);
               
               if (mounted) {
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Close edit page
+                Navigator.pop(context); 
+                Navigator.pop(context); 
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('🗑️ Tugas dan notifikasi berhasil dihapus'),

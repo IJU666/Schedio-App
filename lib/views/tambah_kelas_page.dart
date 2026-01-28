@@ -1,8 +1,3 @@
-// views/tambah_kelas_page.dart
-// ========================================
-// TAMBAH KELAS PAGE - DENGAN BATASAN KARAKTER
-// ========================================
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -31,7 +26,7 @@ class _TambahKelasPageState extends State<TambahKelasPage> {
   String _selectedHari = 'Senin';
   Color _selectedColor = const Color(0xFF7AB8FF);
 
-  // Batasan karakter untuk setiap field
+ 
   static const int maxNamaLength = 25;
   static const int maxRuanganLength = 20;
   static const int maxDosenLength = 30;
@@ -101,7 +96,7 @@ class _TambahKelasPageState extends State<TambahKelasPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // JAM
+                     
                       Column(
                         children: [
                           Container(
@@ -216,7 +211,7 @@ class _TambahKelasPageState extends State<TambahKelasPage> {
                         ),
                       ),
                       
-                      // MENIT
+                   
                       Column(
                         children: [
                           Container(
@@ -531,7 +526,7 @@ class _TambahKelasPageState extends State<TambahKelasPage> {
             const SizedBox(height: 10),
             Row(
   children: [
-    // JAM MULAI
+
     Expanded(
       child: GestureDetector(
         onTap: () => _selectTime(context, true),
@@ -567,7 +562,7 @@ class _TambahKelasPageState extends State<TambahKelasPage> {
       ),
     ),
 
-    // JAM SELESAI
+
     Expanded(
       child: GestureDetector(
         onTap: () => _selectTime(context, false),
@@ -593,7 +588,7 @@ class _TambahKelasPageState extends State<TambahKelasPage> {
 
     const SizedBox(width: 10),
 
-    // DROPDOWN HARI (tetap)
+
     Container(
       height: 50,
       padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -735,14 +730,14 @@ class _TambahKelasPageState extends State<TambahKelasPage> {
             LengthLimitingTextInputFormatter(maxLength),
           ],
           onChanged: (value) {
-            setState(() {}); // Update counter
+            setState(() {}); 
           },
           decoration: InputDecoration(
             hintText: placeholder,
             hintStyle: TextStyle(color: isDarkMode ? Colors.grey[600] : Colors.grey[500]),
             filled: true,
             fillColor: cardColor,
-            counterText: '', // Hide default counter
+            counterText: '', 
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide.none,

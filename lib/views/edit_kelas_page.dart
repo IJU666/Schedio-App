@@ -1,8 +1,3 @@
-// views/edit_kelas_page.dart
-// ========================================
-// EDIT KELAS PAGE - DENGAN BATASAN KARAKTER
-// ========================================
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/schedule_manager.dart';
