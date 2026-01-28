@@ -1,9 +1,9 @@
 class KelasModel {
   final String id;
   final String namaMataKuliah;
-  final String hari; // Senin, Selasa, Rabu, dst
-  final String jamMulai; // Format: "08:00"
-  final String jamSelesai; // Format: "10:00"
+  final String hari; 
+  final String jamMulai; 
+  final String jamSelesai; 
 
   KelasModel({
     required this.id,
@@ -13,7 +13,7 @@ class KelasModel {
     required this.jamSelesai,
   });
 
-  // Konversi string jam ke DateTime untuk hari tertentu
+  
   DateTime getNextClassDateTime() {
     final now = DateTime.now();
     final targetDay = _getNextDayOfWeek(hari);
@@ -29,7 +29,7 @@ class KelasModel {
       minute,
     );
 
-    // Jika waktu sudah lewat hari ini, ambil minggu depan
+
     if (classDateTime.isBefore(now)) {
       classDateTime = classDateTime.add(const Duration(days: 7));
     }
@@ -37,7 +37,7 @@ class KelasModel {
     return classDateTime;
   }
 
-  // Dapatkan tanggal untuk hari tertentu dalam minggu ini atau minggu depan
+ 
   DateTime _getNextDayOfWeek(String dayName) {
     final now = DateTime.now();
     final targetWeekday = _getDayNumber(dayName);
@@ -51,7 +51,7 @@ class KelasModel {
     return now.add(Duration(days: daysToAdd));
   }
 
-  // Konversi nama hari ke angka (1=Senin, 7=Minggu)
+
   int _getDayNumber(String dayName) {
     const days = {
       'Senin': 1,
@@ -65,7 +65,7 @@ class KelasModel {
     return days[dayName] ?? 1;
   }
 
-  // Konversi ke Map
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -76,7 +76,7 @@ class KelasModel {
     };
   }
 
-  // Konversi dari Map
+ 
   factory KelasModel.fromMap(Map<String, dynamic> map) {
     return KelasModel(
       id: map['id'],
