@@ -32,6 +32,6 @@ class MataKuliah extends HiveObject {
     required this.ruangan,
     required this.sks,
     required this.dosen,
-    this.warna = '#7AB8FF', 
+    this.warna = '#7AB8FF',
   });
 }

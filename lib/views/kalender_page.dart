@@ -462,25 +462,24 @@ class _KalenderPageState extends State<KalenderPage> {
       color = _hexToColor(mataKuliah.warna);
     }
 
-    // Hitung lebar yang tersedia per kolom hari
+
     final screenWidth = MediaQuery.of(context).size.width;
-    final timeColumnWidth = 40.0; // Lebar kolom waktu
-    final horizontalPadding = 0.0; // Padding horizontal dari Positioned.fill
+    final timeColumnWidth = 40.0; 
+    final horizontalPadding = 0.0; 
     final availableWidth =
         (screenWidth - timeColumnWidth - horizontalPadding) / 7;
 
-    // Margin horizontal untuk setiap event
+    
     final horizontalMargin = 2.0;
     final totalHorizontalMargin = horizontalMargin * 2;
 
-    // Hitung lebar event berdasarkan jumlah konflik
-    // TIDAK menggunakan minWidth agar semua event terlihat
+
     final eventWidth = (availableWidth - totalHorizontalMargin) / conflictTotal;
 
-    // Offset kiri untuk event yang konflik
+    
     final leftOffset = conflictIndex * eventWidth;
 
-    // Dynamic font sizes berdasarkan tinggi dan lebar
+    
     final isVeryNarrow = eventWidth < 40;
     final isExtremelyNarrow = eventWidth < 30;
 

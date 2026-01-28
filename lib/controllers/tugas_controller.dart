@@ -13,12 +13,12 @@ class TugasController {
   final TaskNotificationService _notificationService = TaskNotificationService();
   final NotificationPreferenceService _preferenceService = NotificationPreferenceService();
 
-  /// Get all tugas
+  
   List<Tugas> getAllTugas() {
     return _tugasBox.values.toList();
   }
 
-  /// Get tugas by date
+  
   List<Tugas> getTugasByDate(DateTime date) {
     return _tugasBox.values.where((tugas) {
       return tugas.tanggal.year == date.year &&
@@ -27,18 +27,18 @@ class TugasController {
     }).toList();
   }
 
-  /// Get tugas by mata kuliah
+  
   List<Tugas> getTugasByMataKuliah(String mataKuliahId) {
     return _tugasBox.values
         .where((tugas) => tugas.mataKuliahId == mataKuliahId)
         .toList();
   }
 
-  /// Add tugas + schedule notifikasi otomatis
+  
   Future<void> addTugas(Tugas tugas) async {
     await _tugasBox.put(tugas.id, tugas);
     
-    // Schedule notifikasi untuk tugas ini
+    
     await _notificationService.scheduleTaskNotifications(
       taskId: tugas.id,
       taskTitle: tugas.judul,
@@ -49,11 +49,11 @@ class TugasController {
     print('✅ Tugas ditambahkan dengan notifikasi: ${tugas.judul}');
   }
 
-  /// Update tugas + reschedule notifikasi
+  
   Future<void> updateTugas(Tugas tugas) async {
     await tugas.save();
     
-    // Reschedule notifikasi dengan data baru
+    
     await _notificationService.scheduleTaskNotifications(
       taskId: tugas.id,
       taskTitle: tugas.judul,
@@ -64,23 +64,23 @@ class TugasController {
     print('🔄 Tugas diupdate dengan notifikasi: ${tugas.judul}');
   }
 
-  /// Delete tugas + cancel notifikasi
+  
   Future<void> deleteTugas(String id) async {
-    // Cancel notifikasi terlebih dahulu
+    
     await _notificationService.cancelTaskNotifications(id);
     
-    // Hapus tugas dari database
+    
     await _tugasBox.delete(id);
     
     print('🗑️ Tugas dihapus beserta notifikasinya: $id');
   }
 
-  /// Get tugas by ID
+
   Tugas? getTugasById(String id) {
     return _tugasBox.get(id);
   }
 
-  /// Update checklist status
+
   Future<void> updateChecklistStatus(String tugasId, int index, bool status) async {
     final tugas = _tugasBox.get(tugasId);
     if (tugas != null) {
@@ -89,16 +89,15 @@ class TugasController {
     }
   }
 
-  /// Initialize notification service
   Future<void> initializeNotifications() async {
     await _notificationService.initialize();
   }
 
-  /// Resync semua notifikasi tugas (untuk dipanggil saat app start atau toggle pengingat)
+  
   Future<void> resyncAllTaskNotifications() async {
     print('🔄 Menyinkronkan ulang notifikasi tugas...');
     
-    // CEK TOGGLE PENGINGAT
+    
     final isEnabled = await _preferenceService.isNotificationEnabled();
     if (!isEnabled) {
       print('⚠️ Notifikasi dinonaktifkan - Cancel semua notifikasi tugas');
@@ -126,18 +125,18 @@ class TugasController {
     print('✅ Sinkronisasi selesai: $successCount/${allTugas.length} tugas');
   }
 
-  /// Get pending notifications count
+  
   Future<int> getPendingNotificationCount() async {
     final pending = await _notificationService.getPendingNotifications();
     return pending.length;
   }
 
-  /// Show test notification
+  
   Future<void> showTestNotification() async {
     await _notificationService.showTestNotification();
   }
 
-  /// Check notification permissions
+  
   Future<bool> checkNotificationPermissions() async {
     return await _notificationService.checkPermissions();
   }

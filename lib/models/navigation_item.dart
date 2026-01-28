@@ -6,7 +6,7 @@ class NavigationItem {
   final IconData icon;
   final String route;
   final bool isCenter; 
-  
+
   NavigationItem({
     required this.id,
     required this.label,

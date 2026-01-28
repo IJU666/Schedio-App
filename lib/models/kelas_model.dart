@@ -13,6 +13,7 @@ class KelasModel {
     required this.jamSelesai,
   });
 
+  
   DateTime getNextClassDateTime() {
     final now = DateTime.now();
     final targetDay = _getNextDayOfWeek(hari);
@@ -28,7 +29,7 @@ class KelasModel {
       minute,
     );
 
-  
+
     if (classDateTime.isBefore(now)) {
       classDateTime = classDateTime.add(const Duration(days: 7));
     }
@@ -36,6 +37,7 @@ class KelasModel {
     return classDateTime;
   }
 
+ 
   DateTime _getNextDayOfWeek(String dayName) {
     final now = DateTime.now();
     final targetWeekday = _getDayNumber(dayName);
@@ -48,6 +50,7 @@ class KelasModel {
 
     return now.add(Duration(days: daysToAdd));
   }
+
 
   int _getDayNumber(String dayName) {
     const days = {
@@ -62,6 +65,7 @@ class KelasModel {
     return days[dayName] ?? 1;
   }
 
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -72,7 +76,7 @@ class KelasModel {
     };
   }
 
-
+ 
   factory KelasModel.fromMap(Map<String, dynamic> map) {
     return KelasModel(
       id: map['id'],
