@@ -1,7 +1,4 @@
-// views/kalender_page.dart
-// ========================================
-// KALENDER PAGE - DENGAN MODERN NAVBAR & THEME
-// ========================================
+
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -113,7 +110,7 @@ class _KalenderPageState extends State<KalenderPage> {
   @override
   void initState() {
     super.initState();
-    _navigationController.setIndex(1); // Schedule page
+    _navigationController.setIndex(1); 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final now = TimeOfDay.now();
       final scrollPosition = (now.hour - 6) * 75.0;
@@ -537,7 +534,7 @@ class _KalenderPageState extends State<KalenderPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // NAMA MATKUL (WAJIB)
+                      
                       Flexible(
                         child: Text(
                           mataKuliah?.nama ?? 'MK',

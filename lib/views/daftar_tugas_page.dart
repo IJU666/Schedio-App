@@ -302,7 +302,7 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // HEADER SECTION - Clickable
+              
               InkWell(
                 onTap: () {
                   setCardState(() {
@@ -314,7 +314,7 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      // Chevron Icon
+                      
                       Icon(
                         isExpanded ? Icons.keyboard_arrow_down : Icons.chevron_right,
                         color: textColor,
@@ -356,7 +356,7 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
                           ],
                         ),
                       ),
-                      // Edit Button
+                      
                       GestureDetector(
                         onTap: () {
                           Navigator.push(
@@ -514,7 +514,7 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
               
               const SizedBox(height: 12),
               
-              // EXPANDED SECTION - Detail Tugas
+              
               if (isExpanded)
                 Container(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -524,7 +524,7 @@ class _DaftarTugasPageState extends State<DaftarTugasPage>
                       Divider(color: isDarkMode ? Colors.grey : Colors.grey[300]),
                       const SizedBox(height: 12),
                       
-                      // Tanggal Lengkap
+                      
                       Row(
                         children: [
                           Icon(
