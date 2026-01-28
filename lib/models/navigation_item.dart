@@ -5,8 +5,8 @@ class NavigationItem {
   final String label;
   final IconData icon;
   final String route;
-  final bool isCenter; // untuk FAB
-
+  final bool isCenter; 
+  
   NavigationItem({
     required this.id,
     required this.label,
